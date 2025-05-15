@@ -54,7 +54,7 @@ export default function NadShoott() {
 
         {/* Footer */}
         <footer className="text-center text-xs text-gray-600 pt-4 border-t border-gray-700">
-          © 2025 NadShoott. All rights reserved.
+          © 2025 NadShoott..!
         </footer>
       </div>
 
