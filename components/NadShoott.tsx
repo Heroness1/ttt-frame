@@ -40,7 +40,7 @@ export default function NadShoott() {
         {/* Description */}
         <section className="text-center">
           <p className="text-gray-300">
-            Shoot your load!.
+            They coming!
           </p>
         </section>
 
@@ -49,9 +49,7 @@ export default function NadShoott() {
           <button className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-3 rounded transition">
             Play Now
           </button>
-          <button className="border border-cyan-500 text-cyan-400 hover:bg-cyan-800 py-3 rounded transition">
-            How it Works
-          </button>
+      
         </section>
 
         {/* Footer */}
