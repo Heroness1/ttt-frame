@@ -33,11 +33,10 @@ export default function NadShoott() {
 
         {/* Floating image */}
         <section className="animate-float">
-          <img src="https://via.placeholder.com/600x300/111111/00ffff?text=Shooter+Gameplay"
-               alt="Game Preview"
-               className="rounded-lg border border-cyan-400 shadow-md w-full" />
-        </section>
-
+  <img src="/images/nadshoott-preview.png"
+       alt="..."
+       className="rounded-lg border border-purple-400 shadow-md w-full" />
+</section>
         {/* Description */}
         <section className="text-center">
           <p className="text-gray-300">
