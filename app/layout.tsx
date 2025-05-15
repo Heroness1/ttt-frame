@@ -1,26 +1,24 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { FrameProvider } from "@/components/farcaster-provider";
-
 import "./globals.css";
+import { Orbitron } from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"] });
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  weight: ["500"],
+});
 
-export const metadata: Metadata = {
-  title: "Monad Farcaster MiniApp Template",
-  description: "A template for building mini-apps on Farcaster and Monad",
+export const metadata = {
+  title: "nadshoott",
+  description: "shhhoot!!",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <FrameProvider>{children}</FrameProvider>
-      </body>
+      <body className={orbitron.className}>{children}</body>
     </html>
   );
 }
