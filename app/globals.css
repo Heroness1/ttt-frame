@@ -6,3 +6,11 @@ body {
   @apply bg-black text-white;
   font-family: 'Orbitron', sans-serif;
 }
+
+.neon-purple-text {
+  text-shadow:
+    0 0 5px #9b59b6,
+    0 0 10px #9b59b6,
+    0 0 20px #8e44ad,
+    0 0 40px #8e44ad;
+}
