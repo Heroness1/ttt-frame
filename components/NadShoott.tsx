@@ -26,10 +26,10 @@ export default function NadShoott() {
       <div className="w-full max-w-xl bg-gray-900 border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
 
         {/* Header */}
-        <header className="text-center animate-fade-in-up">
-          <h1 className="text-5xl font-bold text-cyan-300 neon-text">NadShoott</h1>
-          <p className="text-sm text-gray-400 mt-2">shhhoot!!</p>
-        </header>
+<header className="text-center animate-fade-in-up">
+  <h1 className="text-5xl font-bold text-purple-400 neon-purple-text">NadShoott</h1>
+  <p className="text-sm text-gray-400 mt-2">shhhoot!!</p>
+</header>
 
         {/* Floating image */}
         <section className="animate-float">
@@ -41,7 +41,7 @@ export default function NadShoott() {
         {/* Description */}
         <section className="text-center">
           <p className="text-gray-300">
-            Step into the cyber arena. Outshoot your rivals in this fast-paced pixel shooter.
+            Shoot your load!.
           </p>
         </section>
 
