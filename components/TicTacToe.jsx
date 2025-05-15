@@ -1,60 +1,69 @@
-'use client';
+import React, { useState } from 'react';
 
-import React, { useEffect, useState } from 'react';
+const TicTacToe = () => {
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [isXNext, setIsXNext] = useState(true);
 
-const defaultState = '_________';
-
-export default function TicTacToe() {
-  const [state, setState] = useState(defaultState);
-  const [boardText, setBoardText] = useState('');
-  const [buttons, setButtons] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  async function fetchBoard(move = -1, currentState = state) {
-    setLoading(true);
-    const url = `/frame?state=${currentState}&move=${move}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    setBoardText(data.text);
-    setButtons(data.buttons);
-    setLoading(false);
-
-    if (move >= 0) {
-      const nextStateMatch = data.buttons[move]?.target.match(/state=([XO_]+)/);
-      if (nextStateMatch) {
-        setState(nextStateMatch[1]);
-      } else {
-        setState(currentState);
+  const calculateWinner = (board) => {
+    const lines = [
+      [0,1,2],[3,4,5],[6,7,8],  // rows
+      [0,3,6],[1,4,7],[2,5,8],  // cols
+      [0,4,8],[2,4,6]           // diagonals
+    ];
+    for (let [a,b,c] of lines) {
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        return board[a];
       }
     }
+    return null;
   }
 
-  useEffect(() => {
-    fetchBoard();
-  }, []);
+  const winner = calculateWinner(board);
+
+  const handleClick = (index) => {
+    if (board[index] || winner) return; // ignore if occupied or game over
+    const newBoard = [...board];
+    newBoard[index] = isXNext ? 'X' : 'O';
+    setBoard(newBoard);
+    setIsXNext(!isXNext);
+  }
+
+  const resetGame = () => {
+    setBoard(Array(9).fill(null));
+    setIsXNext(true);
+  }
 
   return (
-    <div style={{ fontFamily: 'monospace', whiteSpace: 'pre', maxWidth: 300, margin: 'auto' }}>
-      <pre>{boardText || 'Loading...'}</pre>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-        {buttons.map((btn, i) => (
+    <div style={{textAlign: 'center', marginTop: '50px'}}>
+      <h1>Tic Tac Toe</h1>
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 60px)', gap: '10px', justifyContent: 'center'}}>
+        {board.map((cell, idx) => (
           <button
-            key={i}
-            disabled={btn.label === '—' || loading}
-            onClick={() => fetchBoard(i)}
+            key={idx}
+            onClick={() => handleClick(idx)}
             style={{
-              padding: 16,
-              fontSize: 18,
-              cursor: btn.label === '—' ? 'not-allowed' : 'pointer',
-              backgroundColor: btn.label === '—' ? '#ddd' : '#eee',
-              borderRadius: 4,
-              border: '1px solid #ccc',
+              width: '60px',
+              height: '60px',
+              fontSize: '24px',
+              cursor: 'pointer'
             }}
           >
-            {btn.label}
+            {cell}
           </button>
         ))}
       </div>
+      <div style={{marginTop: '20px'}}>
+        {winner ? (
+          <h2>Winner: {winner}</h2>
+        ) : (
+          <h2>Next Player: {isXNext ? 'X' : 'O'}</h2>
+        )}
+        <button onClick={resetGame} style={{marginTop: '15px', padding: '8px 16px', cursor: 'pointer'}}>
+          Reset
+        </button>
+      </div>
     </div>
   );
-}
+};
+
+export default TicTacToe;
