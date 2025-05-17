@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import TetrisBoard from "../components/TetrisBoard";
-import NeonLogo from "../components/NeonLogo";  // Import NeonLogo
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+function NeonLogo() {
+  return (
+    <h1 className="text-5xl font-bold text-purple-400 neon-purple-text">
+      TetraMON
+    </h1>
+  );
+}
 
 export default function NadShoott() {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    const sound = document.getElementById("clickSound");
+    const sound = document.getElementById("clickSound") as HTMLAudioElement | null;
     const playClickSound = () => {
       if (sound) {
         sound.currentTime = 0;
@@ -27,49 +34,35 @@ export default function NadShoott() {
   return (
     <div className="text-white min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-xl bg-gray-900 border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
+
         {/* Header */}
         <header className="text-center animate-fade-in-up">
           <NeonLogo />
-          <p className="text-sm text-gray-400 mt-2">Fill them up</p>
+          <p className="text-sm text-gray-400 mt-2">FILLMON</p>
         </header>
 
-        {/* Gameplay or Preview */}
-        <section className="animate-float min-h-[480px]">
-          {!isPlaying ? (
-            <img
-              src="/images/nadshoott-preview.png"
-              alt="Preview"
-              className="rounded-lg border border-purple-400 shadow-md w-full"
-            />
-          ) : (
-            <TetrisBoard />
-          )}
+        {/* Floating image */}
+        <section className="animate-float">
+          <img
+            src="/images/nadshoott-preview.png"
+            alt="..."
+            className="rounded-lg border border-purple-400 shadow-md w-full"
+          />
         </section>
 
         {/* Description */}
-        {!isPlaying && (
-          <section className="text-center">
-            <p className="text-gray-300">They coming!</p>
-          </section>
-        )}
+        <section className="text-center">
+          <p className="text-gray-300">They coming!</p>
+        </section>
 
         {/* Buttons */}
         <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {!isPlaying ? (
-            <button
-              onClick={() => setIsPlaying(true)}
-              className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-3 rounded transition"
-            >
-              Play Now
-            </button>
-          ) : (
-            <button
-              onClick={() => setIsPlaying(false)}
-              className="bg-red-500 hover:bg-red-600 text-black font-bold py-3 rounded transition"
-            >
-              Quit
-            </button>
-          )}
+          <button
+            onClick={() => router.push("/game")}
+            className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-3 rounded transition"
+          >
+            Play Now
+          </button>
         </section>
 
         {/* Footer */}
@@ -84,7 +77,18 @@ export default function NadShoott() {
         preload="auto"
       ></audio>
 
+      {/* Extra styles */}
       <style jsx>{`
+        .neon-purple-text {
+          text-shadow:
+            0 0 5px #bb00ff,
+            0 0 10px #bb00ff,
+            0 0 20px #bb00ff,
+            0 0 40px #ff77ff,
+            0 0 80px #ff77ff;
+          color: #e600e6;
+        }
+
         @keyframes float {
           0%, 100% {
             transform: translateY(0);
@@ -93,9 +97,11 @@ export default function NadShoott() {
             transform: translateY(-10px);
           }
         }
+
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
+
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -106,6 +112,7 @@ export default function NadShoott() {
             transform: translateY(0);
           }
         }
+
         .animate-fade-in-up {
           animation: fadeInUp 1s ease forwards;
         }
