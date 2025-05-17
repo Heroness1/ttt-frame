@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 const ROWS = 20;
 const COLS = 10;
-const INTERVAL = 700; // kecepatan jatuh awal
+const INTERVAL_START = 700;
 
 // Bentuk Tetromino dan warna
 const TETROMINOS = {
@@ -62,10 +62,9 @@ const TETROMINOS = {
   }
 };
 
-// Helper: random tetromino
 const randomTetromino = () => {
-  const tetrominos = Object.keys(TETROMINOS);
-  const rand = tetrominos[Math.floor(Math.random() * tetrominos.length)];
+  const keys = Object.keys(TETROMINOS);
+  const rand = keys[Math.floor(Math.random() * keys.length)];
   return { ...TETROMINOS[rand], name: rand };
 };
 
@@ -80,10 +79,10 @@ export default function TetrisBoard() {
   });
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [intervalSpeed, setIntervalSpeed] = useState(INTERVAL_START);
 
   const intervalRef = useRef(null);
 
-  // Check collision helper
   const checkCollision = (posX, posY, rotation) => {
     const shape = current.tetromino.shape[rotation];
     for (let y = 0; y < shape.length; y++) {
@@ -103,7 +102,6 @@ export default function TetrisBoard() {
     return false;
   };
 
-  // Place tetromino on grid (return new grid)
   const placeTetromino = () => {
     const newGrid = grid.map(row => row.slice());
     const shape = current.tetromino.shape[current.rotation];
@@ -120,13 +118,12 @@ export default function TetrisBoard() {
     return newGrid;
   };
 
-  // Clear full rows and update score
   const clearRows = (board) => {
     let cleared = 0;
     const newBoard = board.filter(row => {
       if (row.every(cell => cell !== null)) {
         cleared++;
-        return false; // remove this row
+        return false;
       }
       return true;
     });
@@ -135,24 +132,22 @@ export default function TetrisBoard() {
     }
     if (cleared > 0) {
       setScore(prev => prev + cleared * 100);
+      // Optional: Speed up game slightly
+      setIntervalSpeed(prev => Math.max(100, prev - cleared * 20));
     }
     return newBoard;
   };
 
-  // Game tick (drop)
   const tick = () => {
     if (gameOver) return;
-
     const { x, y } = current.position;
     if (!checkCollision(x, y + 1, current.rotation)) {
       setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
     } else {
-      // place tetromino on grid permanently
       const newGrid = placeTetromino();
       const clearedGrid = clearRows(newGrid);
       setGrid(clearedGrid);
 
-      // spawn new tetromino
       const next = randomTetromino();
       const startPos = { x: 3, y: 0 };
       if (checkCollision(startPos.x, startPos.y, 0)) {
@@ -164,26 +159,28 @@ export default function TetrisBoard() {
     }
   };
 
-  // Keyboard control
   useEffect(() => {
     const handleKey = (e) => {
       if (gameOver) return;
-
       const { x, y } = current.position;
-      let rotation = current.rotation;
+      const rotation = current.rotation;
       switch (e.key) {
         case "ArrowLeft":
-          if (!checkCollision(x - 1, y, rotation)) setCurrent(c => ({ ...c, position: { x: x - 1, y } }));
+          if (!checkCollision(x - 1, y, rotation))
+            setCurrent(c => ({ ...c, position: { x: x - 1, y } }));
           break;
         case "ArrowRight":
-          if (!checkCollision(x + 1, y, rotation)) setCurrent(c => ({ ...c, position: { x: x + 1, y } }));
+          if (!checkCollision(x + 1, y, rotation))
+            setCurrent(c => ({ ...c, position: { x: x + 1, y } }));
           break;
         case "ArrowDown":
-          if (!checkCollision(x, y + 1, rotation)) setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
+          if (!checkCollision(x, y + 1, rotation))
+            setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
           break;
         case "ArrowUp":
           const newRotation = (rotation + 1) % current.tetromino.shape.length;
-          if (!checkCollision(x, y, newRotation)) setCurrent(c => ({ ...c, rotation: newRotation }));
+          if (!checkCollision(x, y, newRotation))
+            setCurrent(c => ({ ...c, rotation: newRotation }));
           break;
         default:
           break;
@@ -193,20 +190,16 @@ export default function TetrisBoard() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [current, gameOver]);
 
-  // Start game loop
   useEffect(() => {
     if (gameOver) return;
-
-    intervalRef.current = setInterval(tick, INTERVAL);
+    clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(tick, intervalSpeed);
     return () => clearInterval(intervalRef.current);
-  }, [current, gameOver]);
+  }, [tick, intervalSpeed, gameOver]);
 
-  // Render grid with active tetromino
+  // Render the game grid including active tetromino overlay
   const renderGrid = () => {
-    // copy grid
     const displayGrid = grid.map(row => row.slice());
-
-    // overlay active tetromino
     const shape = current.tetromino.shape[current.rotation];
     const { x: posX, y: posY } = current.position;
     for (let y = 0; y < shape.length; y++) {
@@ -226,3 +219,44 @@ export default function TetrisBoard() {
         {row.map((cell, x) => (
           <div
             key={x}
+            style={{
+              width: 30,
+              height: 30,
+              border: "1px solid #222",
+              backgroundColor: cell ? cell : "transparent"
+            }}
+          />
+        ))}
+      </div>
+    ));
+  };
+
+  return (
+    <div style={{ userSelect: "none", color: "white", fontFamily: "sans-serif" }}>
+      <h2>Tetris Game</h2>
+      <div style={{ width: COLS * 30, margin: "auto", backgroundColor: "#111", border: "2px solid #333" }}>
+        {renderGrid()}
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <div>Score: {score}</div>
+        {gameOver && <div style={{ color: "red", marginTop: 10 }}>Game Over!</div>}
+        <button
+          onClick={() => {
+            setGrid(emptyGrid());
+            setCurrent({
+              tetromino: randomTetromino(),
+              rotation: 0,
+              position: { x: 3, y: 0 }
+            });
+            setScore(0);
+            setGameOver(false);
+            setIntervalSpeed(INTERVAL_START);
+          }}
+          style={{ marginTop: 10, padding: "6px 12px", cursor: "pointer" }}
+        >
+          Restart
+        </button>
+      </div>
+    </div>
+  );
+}
