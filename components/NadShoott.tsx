@@ -2,7 +2,8 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import TetrisBoard from "../components/TetrisBoard"; // sesuaikan path
+import TetrisBoard from "../components/TetrisBoard"; //
+import SupController from "../components/SupController"; 
 
 function NeonLogo() {
   return (
