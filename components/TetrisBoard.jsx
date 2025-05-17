@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./TetrisBoard.css";
 
 const ROWS = 20;
 const COLS = 10;
@@ -79,6 +78,7 @@ export default function TetrisBoard() {
   const [gameOver, setGameOver] = useState(false);
   const intervalRef = useRef(null);
 
+  // Collision check
   const checkCollision = (x, y, rotation) => {
     const shape = current.tetromino.shape[rotation];
     for (let i = 0; i < shape.length; i++) {
@@ -99,8 +99,9 @@ export default function TetrisBoard() {
     return false;
   };
 
+  // Place tetromino on grid
   const placeTetromino = () => {
-    const newGrid = grid.map(r => [...r]);
+    const newGrid = grid.map(row => [...row]);
     const shape = current.tetromino.shape[current.rotation];
     const { x, y } = current.position;
     shape.forEach((row, dy) => {
@@ -113,6 +114,7 @@ export default function TetrisBoard() {
     return newGrid;
   };
 
+  // Clear full rows
   const clearRows = (board) => {
     let cleared = 0;
     const filtered = board.filter(row => {
@@ -131,6 +133,7 @@ export default function TetrisBoard() {
     return filtered;
   };
 
+  // Game tick (gravity)
   const tick = () => {
     const { x, y } = current.position;
     if (!checkCollision(x, y + 1, current.rotation)) {
@@ -149,6 +152,44 @@ export default function TetrisBoard() {
     }
   };
 
+  // On-screen control handler
+  const handleControl = (action) => {
+    if (gameOver) return;
+    const { x, y } = current.position;
+    let rot = current.rotation;
+
+    switch (action) {
+      case "left":
+        if (!checkCollision(x - 1, y, rot))
+          setCurrent(c => ({ ...c, position: { x: x - 1, y } }));
+        break;
+      case "right":
+        if (!checkCollision(x + 1, y, rot))
+          setCurrent(c => ({ ...c, position: { x: x + 1, y } }));
+        break;
+      case "down":
+        if (!checkCollision(x, y + 1, rot))
+          setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
+        break;
+      case "rotate":
+        const nextRot = (rot + 1) % current.tetromino.shape.length;
+        if (!checkCollision(x, y, nextRot))
+          setCurrent(c => ({ ...c, rotation: nextRot }));
+        break;
+      case "hardDrop":
+        let ny = y;
+        while (!checkCollision(x, ny + 1, rot)) ny++;
+        setCurrent(c => ({ ...c, position: { x, y: ny } }));
+        break;
+      case "hold":
+        // Placeholder untuk fungsi hold, bisa kamu implementasikan sendiri
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Keyboard controls
   useEffect(() => {
     const handleKey = (e) => {
       if (gameOver) return;
@@ -172,15 +213,20 @@ export default function TetrisBoard() {
           if (!checkCollision(x, y, nextRot))
             setCurrent(c => ({ ...c, rotation: nextRot }));
           break;
+        case " ":
+          let ny = y;
+          while (!checkCollision(x, ny + 1, rot)) ny++;
+          setCurrent(c => ({ ...c, position: { x, y: ny } }));
+          break;
         default:
           break;
       }
     };
-
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [current, gameOver]);
 
+  // Auto tick interval
   useEffect(() => {
     if (!gameOver) {
       intervalRef.current = setInterval(tick, INTERVAL);
@@ -188,6 +234,7 @@ export default function TetrisBoard() {
     }
   }, [current, gameOver]);
 
+  // Render grid with current tetromino overlay
   const renderGrid = () => {
     const displayGrid = grid.map(r => [...r]);
     const shape = current.tetromino.shape[current.rotation];
@@ -206,27 +253,9 @@ export default function TetrisBoard() {
         }
       });
     });
-
     return displayGrid;
   };
 
   return (
-    <div>
-      <div className="tetris-grid">
-        {renderGrid().map((row, y) => (
-          <div key={y} className="tetris-row">
-            {row.map((cell, x) => (
-              <div
-                key={x}
-                className="tetris-cell"
-                style={{ backgroundColor: cell || "black" }}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className="tetris-score">Score: {score}</div>
-      {gameOver && <div className="tetris-game-over">Game Over</div>}
-    </div>
-  );
-}
+    <div className="flex flex-col items-center bg-gray-900 min-h-screen p-4 text-white select-none">
+      <div className="text-3xl font-bold tracking-widest mb
