@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import TetrisBoard from "../components/TetrisBoard"; // sesuaikan path
 
 export default function NadShoott() {
-  const router = useRouter();
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const sound = document.getElementById("clickSound") as HTMLAudioElement | null;
@@ -26,35 +26,49 @@ export default function NadShoott() {
   return (
     <div className="text-white min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-xl bg-gray-900 border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
-
         {/* Header */}
         <header className="text-center animate-fade-in-up">
-          <h1 className="text-5xl font-bold text-purple-400 neon-purple-text">NadShoott</h1>
-          <p className="text-sm text-gray-400 mt-2">shhhoot!!</p>
+          <h1 className="text-5xl font-bold text-purple-400 neon-purple-text">Nadstris</h1>
+          <p className="text-sm text-gray-400 mt-2">Fill them up</p>
         </header>
 
-        {/* Floating image */}
-        <section className="animate-float">
-          <img
-            src="/images/nadshoott-preview.png"
-            alt="..."
-            className="rounded-lg border border-purple-400 shadow-md w-full"
-          />
+        {/* Ganti gambar floating sama gameplay Tetris */}
+        <section className="animate-float min-h-[480px]">
+          {!isPlaying ? (
+            <img
+              src="/images/nadshoott-preview.png"
+              alt="..."
+              className="rounded-lg border border-purple-400 shadow-md w-full"
+            />
+          ) : (
+            <TetrisBoard />
+          )}
         </section>
 
         {/* Description */}
-        <section className="text-center">
-          <p className="text-gray-300">They coming!</p>
-        </section>
+        {!isPlaying && (
+          <section className="text-center">
+            <p className="text-gray-300">They coming!</p>
+          </section>
+        )}
 
         {/* Buttons */}
         <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <button
-            onClick={() => router.push("/game")}
-            className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-3 rounded transition"
-          >
-            Play Now
-          </button>
+          {!isPlaying ? (
+            <button
+              onClick={() => setIsPlaying(true)}
+              className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-3 rounded transition"
+            >
+              Play Now
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsPlaying(false)}
+              className="bg-red-500 hover:bg-red-600 text-black font-bold py-3 rounded transition"
+            >
+              Quit
+            </button>
+          )}
         </section>
 
         {/* Footer */}
