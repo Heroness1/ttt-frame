@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import TetrisBoard from "../components/TetrisBoard"; // sesuaikan path
 
 function NeonLogo() {
   return (
