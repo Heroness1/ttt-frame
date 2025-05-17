@@ -1,87 +1,100 @@
-"use client";
-
 import React, { useState, useEffect, useRef } from "react";
 import SupController from "./SupController";
 
+type TetrominoKey = "I" | "O" | "T" | "S" | "Z" | "J" | "L";
+
+interface Tetromino {
+  shape: number[][][];
+  color: string;
+}
+
 const ROWS = 20;
 const COLS = 10;
-const INTERVAL = 700;
 
-const TETROMINOS = {
+const TETROMINOS: Record<TetrominoKey, Tetromino> = {
   I: {
     shape: [
-      [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
-      [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
+      [[1, 1, 1, 1]],
+      [[1], [1], [1], [1]],
     ],
-    color: "cyan"
+    color: "cyan",
   },
   O: {
-    shape: [[[1, 1], [1, 1]]],
-    color: "yellow"
+    shape: [
+      [[1, 1], [1, 1]],
+    ],
+    color: "yellow",
   },
   T: {
     shape: [
-      [[0, 1, 0], [1, 1, 1], [0, 0, 0]],
-      [[0, 1, 0], [0, 1, 1], [0, 1, 0]],
-      [[0, 0, 0], [1, 1, 1], [0, 1, 0]],
-      [[0, 1, 0], [1, 1, 0], [0, 1, 0]],
+      [[0, 1, 0], [1, 1, 1]],
+      [[1, 0], [1, 1], [1, 0]],
+      [[1, 1, 1], [0, 1, 0]],
+      [[0, 1], [1, 1], [0, 1]],
     ],
-    color: "purple"
+    color: "purple",
   },
   S: {
     shape: [
-      [[0, 1, 1], [1, 1, 0], [0, 0, 0]],
-      [[0, 1, 0], [0, 1, 1], [0, 0, 1]],
+      [[0, 1, 1], [1, 1, 0]],
+      [[1, 0], [1, 1], [0, 1]],
     ],
-    color: "green"
+    color: "green",
   },
   Z: {
     shape: [
-      [[1, 1, 0], [0, 1, 1], [0, 0, 0]],
-      [[0, 0, 1], [0, 1, 1], [0, 1, 0]],
+      [[1, 1, 0], [0, 1, 1]],
+      [[0, 1], [1, 1], [1, 0]],
     ],
-    color: "red"
+    color: "red",
   },
   J: {
     shape: [
-      [[1, 0, 0], [1, 1, 1], [0, 0, 0]],
-      [[0, 1, 1], [0, 1, 0], [0, 1, 0]],
-      [[0, 0, 0], [1, 1, 1], [0, 0, 1]],
-      [[0, 1, 0], [0, 1, 0], [1, 1, 0]],
+      [[1, 0, 0], [1, 1, 1]],
+      [[1, 1], [1, 0], [1, 0]],
+      [[1, 1, 1], [0, 0, 1]],
+      [[0, 1], [0, 1], [1, 1]],
     ],
-    color: "blue"
+    color: "blue",
   },
   L: {
     shape: [
-      [[0, 0, 1], [1, 1, 1], [0, 0, 0]],
-      [[0, 1, 0], [0, 1, 0], [0, 1, 1]],
-      [[0, 0, 0], [1, 1, 1], [1, 0, 0]],
-      [[1, 1, 0], [0, 1, 0], [0, 1, 0]],
+      [[0, 0, 1], [1, 1, 1]],
+      [[1, 0], [1, 0], [1, 1]],
+      [[1, 1, 1], [1, 0, 0]],
+      [[1, 1], [0, 1], [0, 1]],
     ],
-    color: "orange"
-  }
+    color: "orange",
+  },
 };
 
-const randomTetromino = () => {
-  const keys = Object.keys(TETROMINOS);
-  const rand = keys[Math.floor(Math.random() * keys.length)];
-  return { ...TETROMINOS[rand], name: rand };
-};
+interface CurrentTetromino {
+  name: TetrominoKey;
+  position: { x: number; y: number };
+  rotation: number;
+  tetromino: Tetromino;
+}
 
 const emptyGrid = () => Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 
-export default function TetrisBoard() {
-  const [grid, setGrid] = useState(emptyGrid());
-  const [current, setCurrent] = useState({
-    tetromino: randomTetromino(),
+const randomTetromino = (): CurrentTetromino => {
+  const keys = Object.keys(TETROMINOS) as TetrominoKey[];
+  const rand = keys[Math.floor(Math.random() * keys.length)];
+  return {
+    name: rand,
+    position: { x: Math.floor(COLS / 2) - 1, y: 0 },
     rotation: 0,
-    position: { x: 3, y: 0 }
-  });
-  const [score, setScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const intervalRef = useRef<NodeJS.Timer | null>(null);
+    tetromino: TETROMINOS[rand],
+  };
+};
 
+const TetrisBoard: React.FC = () => {
+  const [grid, setGrid] = useState<(string | null)[][]>(emptyGrid());
+  const [current, setCurrent] = useState<CurrentTetromino>(randomTetromino());
+  const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cek collision ketika pindah posisi atau rotate
   const checkCollision = (x: number, y: number, rotation: number) => {
     const shape = current.tetromino.shape[rotation];
     for (let row = 0; row < shape.length; row++) {
@@ -90,180 +103,149 @@ export default function TetrisBoard() {
           const newX = x + col;
           const newY = y + row;
           if (
-            newX < 0 || newX >= COLS || newY >= ROWS ||
-            (newY >= 0 && grid[newY][newX])
-          ) return true;
+            newX < 0 ||
+            newX >= COLS ||
+            newY >= ROWS ||
+            (newY >= 0 && grid[newY][newX] !== null)
+          ) {
+            return true;
+          }
         }
       }
     }
     return false;
   };
 
-  const placeTetromino = () => {
-    const newGrid = grid.map(row => [...row]);
-    const shape = current.tetromino.shape[current.rotation];
-    const { x, y } = current.position;
-    shape.forEach((row, dy) => {
-      row.forEach((cell, dx) => {
-        if (cell) {
-          const newY = y + dy;
-          const newX = x + dx;
-          if (newY >= 0) newGrid[newY][newX] = current.tetromino.color;
-        }
-      });
-    });
-    return newGrid;
-  };
-
-  const clearRows = (board: string[][]) => {
-    let cleared = 0;
-    const newBoard = board.filter(row => {
-      if (row.every(cell => cell !== null)) {
-        cleared++;
-        return false;
-      }
-      return true;
-    });
-    while (newBoard.length < ROWS) {
-      newBoard.unshift(Array(COLS).fill(null));
-    }
-    if (cleared > 0) setScore(prev => prev + cleared * 100);
-    return newBoard;
-  };
-
-  const tick = () => {
-    if (gameOver || isPaused) return;
-    const { x, y } = current.position;
-    if (!checkCollision(x, y + 1, current.rotation)) {
-      setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
+  const moveDown = () => {
+    if (!checkCollision(current.position.x, current.position.y + 1, current.rotation)) {
+      setCurrent((prev) => ({
+        ...prev,
+        position: { x: prev.position.x, y: prev.position.y + 1 },
+      }));
     } else {
-      const newGrid = placeTetromino();
-      const cleared = clearRows(newGrid);
-      setGrid(cleared);
-      const next = randomTetromino();
-      const startPos = { x: 3, y: 0 };
-      if (checkCollision(startPos.x, startPos.y, 0)) {
-        setGameOver(true);
-        clearInterval(intervalRef.current!);
-      } else {
-        setCurrent({ tetromino: next, rotation: 0, position: startPos });
-      }
+      // Lock tetromino on grid
+      const shape = current.tetromino.shape[current.rotation];
+      setGrid((prevGrid) => {
+        const newGrid = prevGrid.map((row) => [...row]);
+        for (let row = 0; row < shape.length; row++) {
+          for (let col = 0; col < shape[row].length; col++) {
+            if (shape[row][col]) {
+              const x = current.position.x + col;
+              const y = current.position.y + row;
+              if (y >= 0) newGrid[y][x] = current.name;
+            }
+          }
+        }
+        return newGrid;
+      });
+      // Reset current tetromino
+      setCurrent(randomTetromino());
     }
   };
 
+  // Start game loop
   useEffect(() => {
-    if (gameOver || isPaused) return;
-    intervalRef.current = setInterval(tick, INTERVAL);
-    return () => clearInterval(intervalRef.current!);
-  }, [current, gameOver, isPaused]);
-
-  const hardDrop = () => {
-    let { x, y } = current.position;
-    while (!checkCollision(x, y + 1, current.rotation)) {
-      y++;
+    if (!isPaused) {
+      intervalRef.current = setInterval(() => {
+        moveDown();
+      }, 1000);
     }
-    setCurrent(c => ({ ...c, position: { x, y } }));
-  };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [current, isPaused]);
 
-  const resetGame = () => {
-    setGrid(emptyGrid());
-    setScore(0);
-    setGameOver(false);
-    setIsPaused(false);
-    setCurrent({
-      tetromino: randomTetromino(),
-      rotation: 0,
-      position: { x: 3, y: 0 }
-    });
-  };
-
-  const handleControl = (button: string) => {
-    if (gameOver && button !== "back") return;
-
-    const { x, y } = current.position;
-    const rotation = current.rotation;
+  const handleButtonPress = (button: string) => {
+    if (isPaused) return;
 
     switch (button) {
       case "left":
-        if (!checkCollision(x - 1, y, rotation))
-          setCurrent(c => ({ ...c, position: { x: x - 1, y } }));
+        if (!checkCollision(current.position.x - 1, current.position.y, current.rotation)) {
+          setCurrent((prev) => ({
+            ...prev,
+            position: { x: prev.position.x - 1, y: prev.position.y },
+          }));
+        }
         break;
       case "right":
-        if (!checkCollision(x + 1, y, rotation))
-          setCurrent(c => ({ ...c, position: { x: x + 1, y } }));
+        if (!checkCollision(current.position.x + 1, current.position.y, current.rotation)) {
+          setCurrent((prev) => ({
+            ...prev,
+            position: { x: prev.position.x + 1, y: prev.position.y },
+          }));
+        }
         break;
       case "down":
-        if (!checkCollision(x, y + 1, rotation))
-          setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
+        moveDown();
         break;
-      case "rotate":
-        const nextRotation = (rotation + 1) % current.tetromino.shape.length;
-        if (!checkCollision(x, y, nextRotation))
-          setCurrent(c => ({ ...c, rotation: nextRotation }));
+      case "up": // rotate
+        const newRotation = (current.rotation + 1) % current.tetromino.shape.length;
+        if (!checkCollision(current.position.x, current.position.y, newRotation)) {
+          setCurrent((prev) => ({ ...prev, rotation: newRotation }));
+        }
         break;
       case "A":
-      case "up":
-        setIsPaused(p => !p);
+        // Bisa untuk hard drop atau fungsi lain
         break;
       case "B":
-        hardDrop();
+        setIsPaused((p) => !p);
         break;
       case "back":
-        resetGame();
+        // Fungsi kembali ke menu, implementasi terserah
         break;
     }
   };
 
-  const renderGrid = () => {
-    const display = grid.map(row => [...row]);
-    const shape = current.tetromino.shape[current.rotation];
-    const { x, y } = current.position;
-    shape.forEach((row, dy) => {
-      row.forEach((cell, dx) => {
-        if (cell) {
-          const newY = y + dy;
-          const newX = x + dx;
-          if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
-            display[newY][newX] = current.tetromino.color;
-          }
-        }
-      });
-    });
-    return display.map((row, yIdx) => (
-      <div key={yIdx} style={{ display: "flex" }}>
-        {row.map((cell, xIdx) => (
-          <div
-            key={xIdx}
-            style={{
-              width: 24,
-              height: 24,
-              backgroundColor: cell || "#222",
-              border: "1px solid #333",
-            }}
-          />
-        ))}
-      </div>
-    ));
-  };
-
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-      <h2 className="text-xl font-bold mb-4">
-        {gameOver ? "GAME OVER" : isPaused ? "PAUSED" : `Score: ${score}`}
-      </h2>
-
+    <div>
       <div
         style={{
-          backgroundColor: "#000",
-          border: "4px solid cyan",
-          padding: 10,
-          borderRadius: 8,
+          display: "grid",
+          gridTemplateColumns: `repeat(${COLS}, 20px)`,
+          gridTemplateRows: `repeat(${ROWS}, 20px)`,
+          gap: "1px",
+          backgroundColor: "#222",
         }}
       >
-        {renderGrid()}
-      </div>
+        {grid.map((row, y) =>
+          row.map((cell, x) => {
+            // Cek apakah ada bagian tetromino current di sini juga
+            let color = cell ? TETROMINOS[cell as TetrominoKey].color : "black";
 
-      <SupController onButtonPress={handleControl} />
+            // Check current tetromino overlay
+            const shape = current.tetromino.shape[current.rotation];
+            const relativeX = x - current.position.x;
+            const relativeY = y - current.position.y;
+            if (
+              relativeX >= 0 &&
+              relativeX < shape[0].length &&
+              relativeY >= 0 &&
+              relativeY < shape.length &&
+              shape[relativeY][relativeX]
+            ) {
+              color = current.tetromino.color;
+            }
+
+            return (
+              <div
+                key={`${x}-${y}`}
+                style={{
+                  width: 20,
+                  height: 20,
+                  backgroundColor: color,
+                  border: "1px solid #444",
+                }}
+              />
+            );
+          })
+        )}
+      </div>
+      <SupController onButtonPress={handleButtonPress} />
+      <div>
+        {isPaused ? "Paused" : "Playing"}
+      </div>
     </div>
   );
-}
+};
+
+export default TetrisBoard;
