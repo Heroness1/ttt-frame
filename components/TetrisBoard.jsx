@@ -149,37 +149,7 @@ export default function TetrisBoard() {
     }
   };
 
-  // Keyboard controls
-  useEffect(() => {
-    if (gameOver) return;
-    const handleKey = (e) => {
-      const { x, y } = current.position;
-      let rot = current.rotation;
-      switch (e.key) {
-        case "ArrowLeft":
-          if (!checkCollision(x - 1, y, rot))
-            setCurrent((c) => ({ ...c, position: { x: x - 1, y } }));
-          break;
-        case "ArrowRight":
-          if (!checkCollision(x + 1, y, rot))
-            setCurrent((c) => ({ ...c, position: { x: x + 1, y } }));
-          break;
-        case "ArrowDown":
-          if (!checkCollision(x, y + 1, rot))
-            setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
-          break;
-        case "ArrowUp":
-          const nextRot = (rot + 1) % current.tetromino.shape.length;
-          if (!checkCollision(x, y, nextRot)) setCurrent((c) => ({ ...c, rotation: nextRot }));
-          break;
-        default:
-          break;
-      }
-    };
-
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [current, gameOver]);
+  // No keyboard controls for mobile only
 
   // Game loop interval
   useEffect(() => {
@@ -264,7 +234,48 @@ export default function TetrisBoard() {
 
       <div className="mt-4 text-lg">Score: {score}</div>
 
-      {/* Retro gamepad buttons */}
-      <div className="mt-6 flex flex-wrap justify-center gap-4 max-w-xs">
+      {/* Retro gamepad fixed at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-4 flex justify-center gap-4 max-w-md mx-auto shadow-inner z-50">
         <button
           onClick={() => handleControl("left")}
+          className="bg-gray-700 px-5 py-2 rounded-md shadow-md hover:bg-gray-600 active:scale-95 transition-transform font-mono text-2xl"
+          aria-label="Move Left"
+        >
+          ◀
+        </button>
+        <button
+          onClick={() => handleControl("rotate")}
+          className="bg-gray-700 px-5 py-2 rounded-md shadow-md hover:bg-gray-600 active:scale-95 transition-transform font-mono text-2xl"
+          aria-label="Rotate"
+        >
+          ↻
+        </button>
+        <button
+          onClick={() => handleControl("right")}
+          className="bg-gray-700 px-5 py-2 rounded-md shadow-md hover:bg-gray-600 active:scale-95 transition-transform font-mono text-2xl"
+          aria-label="Move Right"
+        >
+          ▶
+        </button>
+        <button
+          onClick={() => handleControl("down")}
+          className="bg-gray-700 px-5 py-2 rounded-md shadow-md hover:bg-gray-600 active:scale-95 transition-transform font-mono text-2xl"
+          aria-label="Move Down"
+        >
+          ▼
+        </button>
+        <button
+          onClick={() => handleControl("hardDrop")}
+          className="bg-red-600 px-5 py-2 rounded-md shadow-md hover:bg-red-500 active:scale-95 transition-transform font-mono text-2xl text-white"
+          aria-label="Hard Drop"
+        >
+          DROP
+        </button>
+      </div>
+
+      {gameOver && (
+        <div className="mt-6 text-2xl text-red-500 font-bold">GAME OVER</div>
+      )}
+    </div>
+  );
+}
