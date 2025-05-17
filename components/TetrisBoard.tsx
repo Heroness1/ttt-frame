@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import SupController from "../SupController";
+import SupController from "./SupController";
 
 const ROWS = 20;
 const COLS = 10;
