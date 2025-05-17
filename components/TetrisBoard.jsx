@@ -247,7 +247,7 @@ export default function TetrisBoard() {
   };
 
   return (
-    <div className="flex flex-col items-center bg-gray-900 min-h-screen p-4 text-white select-none">
+    <div className="flex flex-col items-center bg-gray-900 min-h-screen p-4 text-white select-none relative">
       <div className="text-3xl font-bold tracking-widest mb-4">TETRIS</div>
 
       <div className="bg-gray-800 p-2 rounded-md grid grid-cols-10 gap-0.5">
@@ -268,44 +268,3 @@ export default function TetrisBoard() {
       <div className="mt-6 flex flex-wrap justify-center gap-4 max-w-xs">
         <button
           onClick={() => handleControl("left")}
-          className="bg-gray-700 px-5 py-2 rounded-md shadow-md hover:bg-gray-600 active:scale-95 transition-transform font-mono text-2xl"
-          aria-label="Move Left"
-        >
-          ◀
-        </button>
-        <button
-          onClick={() => handleControl("rotate")}
-          className="bg-gray-700 px-5 py-2 rounded-md shadow-md hover:bg-gray-600 active:scale-95 transition-transform font-mono text-2xl"
-          aria-label="Rotate"
-        >
-          ↻
-        </button>
-        <button
-          onClick={() => handleControl("right")}
-          className="bg-gray-700 px-5 py-2 rounded-md shadow-md hover:bg-gray-600 active:scale-95 transition-transform font-mono text-2xl"
-          aria-label="Move Right"
-        >
-          ▶
-        </button>
-        <button
-          onClick={() => handleControl("down")}
-          className="bg-gray-700 px-5 py-2 rounded-md shadow-md hover:bg-gray-600 active:scale-95 transition-transform font-mono text-2xl"
-          aria-label="Move Down"
-        >
-          ▼
-        </button>
-        <button
-          onClick={() => handleControl("hardDrop")}
-          className="bg-red-600 px-5 py-2 rounded-md shadow-md hover:bg-red-500 active:scale-95 transition-transform font-mono text-2xl text-white"
-          aria-label="Hard Drop"
-        >
-          DROP
-        </button>
-      </div>
-
-      {gameOver && (
-        <div className="mt-6 text-2xl text-red-500 font-bold">GAME OVER</div>
-      )}
-    </div>
-  );
-}
