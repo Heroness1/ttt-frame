@@ -1,0 +1,36 @@
+.tetris-board {
+  display: inline-block;
+  background: #111;
+  padding: 4px;
+  border: 2px solid #888;
+}
+
+.tetris-row {
+  display: flex;
+}
+
+.tetris-cell {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #222;
+  box-sizing: border-box;
+}
+
+.score {
+  margin-top: 10px;
+  color: white;
+  font-family: monospace;
+}
+
+.game-over {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: black;
+  color: red;
+  font-size: 2em;
+  padding: 1em 2em;
+  border: 2px solid red;
+  z-index: 10;
+}
