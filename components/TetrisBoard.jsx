@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const ROWS = 20;
+const ROWS = 10;
 const COLS = 10;
 const INTERVAL = 700;
 
@@ -72,7 +72,7 @@ export default function TetrisBoard() {
   const [current, setCurrent] = useState({
     tetromino: randomTetromino(),
     rotation: 0,
-    position: { x: 3, y: 0 }
+    position: { x: 2, y: -1 }
   });
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
@@ -153,34 +153,6 @@ export default function TetrisBoard() {
     return () => clearInterval(intervalRef.current);
   }, [current, gameOver]);
 
-  // Kalau mau pakai tombol fisik, ini bisa dihilangkan kalo cuma mobile:
-  // useEffect(() => {
-  //   const handleKey = (e) => {
-  //     if (gameOver) return;
-  //     const { x, y } = current.position;
-  //     let rotation = current.rotation;
-  //     switch (e.key) {
-  //       case "ArrowLeft":
-  //         if (!checkCollision(x - 1, y, rotation)) setCurrent(c => ({ ...c, position: { x: x - 1, y } }));
-  //         break;
-  //       case "ArrowRight":
-  //         if (!checkCollision(x + 1, y, rotation)) setCurrent(c => ({ ...c, position: { x: x + 1, y } }));
-  //         break;
-  //       case "ArrowDown":
-  //         if (!checkCollision(x, y + 1, rotation)) setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
-  //         break;
-  //       case "ArrowUp":
-  //         const nextRotation = (rotation + 1) % current.tetromino.shape.length;
-  //         if (!checkCollision(x, y, nextRotation)) setCurrent(c => ({ ...c, rotation: nextRotation }));
-  //         break;
-  //       default:
-  //         break;
-  //     }
-  //   };
-  //   window.addEventListener("keydown", handleKey);
-  //   return () => window.removeEventListener("keydown", handleKey);
-  // }, [current, gameOver]);
-
   const handleControl = (direction) => {
     if (gameOver) return;
     const { x, y } = current.position;
@@ -225,8 +197,8 @@ export default function TetrisBoard() {
           <div
             key={xIdx}
             style={{
-              width: 35,
-              height: 35,
+              width: 25,
+              height: 25,
               backgroundColor: cell || "#222",
               border: "1px solid #444",
               boxSizing: "border-box",
@@ -246,105 +218,67 @@ export default function TetrisBoard() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "flex-start",
+        justifyContent: "center",
+        fontFamily: "monospace",
       }}
     >
-      <h2 style={{ color: "white", marginBottom: 10, fontFamily: "monospace" }}>
-        {gameOver ? "Game Over" : `Score: ${score}`}
-      </h2>
       <div
         style={{
-          width: COLS * 35,
           backgroundColor: "#111",
-          padding: 10,
-          borderRadius: 8,
-          boxShadow: "0 0 10px #0ff",
-          userSelect: "none",
+          border: "4px solid #0ff",
+          borderRadius: 20,
+          padding: 20,
+          boxShadow: "0 0 30px #0ff",
+          display: "inline-block",
         }}
       >
-        {renderGrid()}
-      </div>
+        <h2 style={{ color: "white", marginBottom: 10, textAlign: "center" }}>
+          {gameOver ? "GAME OVER" : `Score: ${score}`}
+        </h2>
 
-      {/* Tombol gamepad retro di bawah layar */}
-      <div
-        style={{
-          marginTop: 20,
-          display: "flex",
-          justifyContent: "center",
-          gap: 15,
-          flexWrap: "wrap",
-          maxWidth: COLS * 35,
-        }}
-      >
-        <button
-          onClick={() => handleControl("left")}
+        <div
           style={{
-            backgroundColor: "#333",
+            width: COLS * 25,
+            backgroundColor: "#000",
+            padding: 10,
+            borderRadius: 10,
             border: "2px solid #0ff",
-            borderRadius: 6,
-            padding: "10px 15px",
-            color: "white",
-            fontWeight: "bold",
-            fontFamily: "monospace",
-            cursor: "pointer",
-            userSelect: "none",
-            minWidth: 60,
           }}
         >
-          LEFT
-        </button>
-        <button
-          onClick={() => handleControl("rotate")}
+          {renderGrid()}
+        </div>
+
+        <div
           style={{
-            backgroundColor: "#333",
-            border: "2px solid #0ff",
-            borderRadius: 6,
-            padding: "10px 15px",
-            color: "white",
-            fontWeight: "bold",
-            fontFamily: "monospace",
-            cursor: "pointer",
-            userSelect: "none",
-            minWidth: 60,
+            marginTop: 20,
+            display: "grid",
+            gridTemplateAreas: `
+              ".    up    ."
+              "left rot right"
+              ".   down  ."
+            `,
+            gap: 10,
+            justifyContent: "center",
           }}
         >
-          ROTATE
-        </button>
-        <button
-          onClick={() => handleControl("down")}
-          style={{
-            backgroundColor: "#333",
-            border: "2px solid #0ff",
-            borderRadius: 6,
-            padding: "10px 15px",
-            color: "white",
-            fontWeight: "bold",
-            fontFamily: "monospace",
-            cursor: "pointer",
-            userSelect: "none",
-            minWidth: 60,
-          }}
-        >
-          DOWN
-        </button>
-        <button
-          onClick={() => handleControl("right")}
-          style={{
-            backgroundColor: "#333",
-            border: "2px solid #0ff",
-            borderRadius: 6,
-            padding: "10px 15px",
-            color: "white",
-            fontWeight: "bold",
-            fontFamily: "monospace",
-            cursor: "pointer",
-            userSelect: "none",
-            minWidth: 60,
-          }}
-        >
-          RIGHT
-        </button>
+          <button style={btnStyle} onClick={() => handleControl("left")}>LEFT</button>
+          <button style={btnStyle} onClick={() => handleControl("rotate")}>ROTATE</button>
+          <button style={btnStyle} onClick={() => handleControl("right")}>RIGHT</button>
+          <button style={btnStyle} onClick={() => handleControl("down")}>DOWN</button>
+        </div>
       </div>
     </div>
   );
 }
+
+const btnStyle = {
+  backgroundColor: "#333",
+  border: "2px solid #0ff",
+  borderRadius: 6,
+  padding: "8px 12px",
+  color: "white",
+  fontWeight: "bold",
+  fontFamily: "monospace",
+  cursor: "pointer",
+  minWidth: 60,
+};
