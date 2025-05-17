@@ -2,61 +2,58 @@ import React, { useState, useEffect, useRef } from "react";
 
 const ROWS = 20;
 const COLS = 10;
-const INTERVAL_START = 700;
+const INTERVAL = 700;
 
-// Bentuk Tetromino dan warna
 const TETROMINOS = {
   I: {
     shape: [
-      [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
-      [[0,0,1,0],[0,0,1,0],[0,0,1,0],[0,0,1,0]],
+      [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
+      [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
     ],
     color: "cyan"
   },
   O: {
-    shape: [
-      [[1,1],[1,1]],
-    ],
+    shape: [[[1, 1], [1, 1]]],
     color: "yellow"
   },
   T: {
     shape: [
-      [[0,1,0],[1,1,1],[0,0,0]],
-      [[0,1,0],[0,1,1],[0,1,0]],
-      [[0,0,0],[1,1,1],[0,1,0]],
-      [[0,1,0],[1,1,0],[0,1,0]],
+      [[0, 1, 0], [1, 1, 1], [0, 0, 0]],
+      [[0, 1, 0], [0, 1, 1], [0, 1, 0]],
+      [[0, 0, 0], [1, 1, 1], [0, 1, 0]],
+      [[0, 1, 0], [1, 1, 0], [0, 1, 0]],
     ],
     color: "purple"
   },
   S: {
     shape: [
-      [[0,1,1],[1,1,0],[0,0,0]],
-      [[0,1,0],[0,1,1],[0,0,1]],
+      [[0, 1, 1], [1, 1, 0], [0, 0, 0]],
+      [[0, 1, 0], [0, 1, 1], [0, 0, 1]],
     ],
     color: "green"
   },
   Z: {
     shape: [
-      [[1,1,0],[0,1,1],[0,0,0]],
-      [[0,0,1],[0,1,1],[0,1,0]],
+      [[1, 1, 0], [0, 1, 1], [0, 0, 0]],
+      [[0, 0, 1], [0, 1, 1], [0, 1, 0]],
     ],
     color: "red"
   },
   J: {
     shape: [
-      [[1,0,0],[1,1,1],[0,0,0]],
-      [[0,1,1],[0,1,0],[0,1,0]],
-      [[0,0,0],[1,1,1],[0,0,1]],
-      [[0,1,0],[0,1,0],[1,1,0]],
+      [[1, 0, 0], [1, 1, 1], [0, 0, 0]],
+      [[0, 1, 1], [0, 1, 0], [0, 1, 0]],
+      [[0, 0, 0], [1, 1, 1], [0, 0, 1]],
+      [[0, 1, 0], [0, 1, 0], [1, 1, 0]],
     ],
     color: "blue"
   },
   L: {
     shape: [
-      [[0,0,1],[1,1,1],[0,0,0]],
-      [[0,1,0],[0,1,0],[0,1,1]],
-      [[0,0,0],[1,1,1],[1,0,0]],
-      [[1,1,0],[0,1,0],[0,1,0]],
+      [[0, 0, 1], [1, 1, 1], [0, 0, 0]],
+      [[0, 1, 0], [0, 1, 0], [0, 1, 1]],
+      [[0, 0, 0], [1, 1, 1], [1, 0, 0]],
+      [[1, 1, 0], [0, 1, 0], [0, 1, 0]],
     ],
     color: "orange"
   }
@@ -79,23 +76,19 @@ export default function TetrisBoard() {
   });
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [intervalSpeed, setIntervalSpeed] = useState(INTERVAL_START);
-
   const intervalRef = useRef(null);
 
-  const checkCollision = (posX, posY, rotation) => {
+  const checkCollision = (x, y, rotation) => {
     const shape = current.tetromino.shape[rotation];
-    for (let y = 0; y < shape.length; y++) {
-      for (let x = 0; x < shape[y].length; x++) {
-        if (shape[y][x]) {
-          const newX = posX + x;
-          const newY = posY + y;
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (shape[row][col]) {
+          const newX = x + col;
+          const newY = y + row;
           if (
             newX < 0 || newX >= COLS || newY >= ROWS ||
             (newY >= 0 && grid[newY][newX])
-          ) {
-            return true;
-          }
+          ) return true;
         }
       }
     }
@@ -103,18 +96,18 @@ export default function TetrisBoard() {
   };
 
   const placeTetromino = () => {
-    const newGrid = grid.map(row => row.slice());
+    const newGrid = grid.map(row => [...row]);
     const shape = current.tetromino.shape[current.rotation];
-    const { x: posX, y: posY } = current.position;
-    for (let y = 0; y < shape.length; y++) {
-      for (let x = 0; x < shape[y].length; x++) {
-        if (shape[y][x]) {
-          const gridY = posY + y;
-          const gridX = posX + x;
-          if(gridY >= 0) newGrid[gridY][gridX] = current.tetromino.color;
+    const { x, y } = current.position;
+    shape.forEach((row, dy) => {
+      row.forEach((cell, dx) => {
+        if (cell) {
+          const newY = y + dy;
+          const newX = x + dx;
+          if (newY >= 0) newGrid[newY][newX] = current.tetromino.color;
         }
-      }
-    }
+      });
+    });
     return newGrid;
   };
 
@@ -130,11 +123,7 @@ export default function TetrisBoard() {
     while (newBoard.length < ROWS) {
       newBoard.unshift(Array(COLS).fill(null));
     }
-    if (cleared > 0) {
-      setScore(prev => prev + cleared * 100);
-      // Optional: Speed up game slightly
-      setIntervalSpeed(prev => Math.max(100, prev - cleared * 20));
-    }
+    if (cleared > 0) setScore(prev => prev + cleared * 100);
     return newBoard;
   };
 
@@ -145,9 +134,8 @@ export default function TetrisBoard() {
       setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
     } else {
       const newGrid = placeTetromino();
-      const clearedGrid = clearRows(newGrid);
-      setGrid(clearedGrid);
-
+      const cleared = clearRows(newGrid);
+      setGrid(cleared);
       const next = randomTetromino();
       const startPos = { x: 3, y: 0 };
       if (checkCollision(startPos.x, startPos.y, 0)) {
@@ -163,24 +151,20 @@ export default function TetrisBoard() {
     const handleKey = (e) => {
       if (gameOver) return;
       const { x, y } = current.position;
-      const rotation = current.rotation;
+      let rotation = current.rotation;
       switch (e.key) {
         case "ArrowLeft":
-          if (!checkCollision(x - 1, y, rotation))
-            setCurrent(c => ({ ...c, position: { x: x - 1, y } }));
+          if (!checkCollision(x - 1, y, rotation)) setCurrent(c => ({ ...c, position: { x: x - 1, y } }));
           break;
         case "ArrowRight":
-          if (!checkCollision(x + 1, y, rotation))
-            setCurrent(c => ({ ...c, position: { x: x + 1, y } }));
+          if (!checkCollision(x + 1, y, rotation)) setCurrent(c => ({ ...c, position: { x: x + 1, y } }));
           break;
         case "ArrowDown":
-          if (!checkCollision(x, y + 1, rotation))
-            setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
+          if (!checkCollision(x, y + 1, rotation)) setCurrent(c => ({ ...c, position: { x, y: y + 1 } }));
           break;
         case "ArrowUp":
-          const newRotation = (rotation + 1) % current.tetromino.shape.length;
-          if (!checkCollision(x, y, newRotation))
-            setCurrent(c => ({ ...c, rotation: newRotation }));
+          const nextRotation = (rotation + 1) % current.tetromino.shape.length;
+          if (!checkCollision(x, y, nextRotation)) setCurrent(c => ({ ...c, rotation: nextRotation }));
           break;
         default:
           break;
@@ -192,38 +176,35 @@ export default function TetrisBoard() {
 
   useEffect(() => {
     if (gameOver) return;
-    clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(tick, intervalSpeed);
+    intervalRef.current = setInterval(tick, INTERVAL);
     return () => clearInterval(intervalRef.current);
-  }, [tick, intervalSpeed, gameOver]);
+  }, [current, gameOver]);
 
-  // Render the game grid including active tetromino overlay
   const renderGrid = () => {
-    const displayGrid = grid.map(row => row.slice());
+    const display = grid.map(row => [...row]);
     const shape = current.tetromino.shape[current.rotation];
-    const { x: posX, y: posY } = current.position;
-    for (let y = 0; y < shape.length; y++) {
-      for (let x = 0; x < shape[y].length; x++) {
-        if (shape[y][x]) {
-          const gridY = posY + y;
-          const gridX = posX + x;
-          if (gridY >= 0 && gridY < ROWS && gridX >= 0 && gridX < COLS) {
-            displayGrid[gridY][gridX] = current.tetromino.color;
+    const { x, y } = current.position;
+    shape.forEach((row, dy) => {
+      row.forEach((cell, dx) => {
+        if (cell) {
+          const newY = y + dy;
+          const newX = x + dx;
+          if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
+            display[newY][newX] = current.tetromino.color;
           }
         }
-      }
-    }
-
-    return displayGrid.map((row, y) => (
-      <div key={y} style={{ display: "flex" }}>
-        {row.map((cell, x) => (
+      });
+    });
+    return display.map((row, yIdx) => (
+      <div key={yIdx} style={{ display: "flex" }}>
+        {row.map((cell, xIdx) => (
           <div
-            key={x}
+            key={xIdx}
             style={{
-              width: 30,
-              height: 30,
-              border: "1px solid #222",
-              backgroundColor: cell ? cell : "transparent"
+              width: 20,
+              height: 20,
+              backgroundColor: cell || "black",
+              border: "1px solid #111",
             }}
           />
         ))}
@@ -232,31 +213,9 @@ export default function TetrisBoard() {
   };
 
   return (
-    <div style={{ userSelect: "none", color: "white", fontFamily: "sans-serif" }}>
-      <h2>Tetris Game</h2>
-      <div style={{ width: COLS * 30, margin: "auto", backgroundColor: "#111", border: "2px solid #333" }}>
-        {renderGrid()}
-      </div>
-      <div style={{ marginTop: 10 }}>
-        <div>Score: {score}</div>
-        {gameOver && <div style={{ color: "red", marginTop: 10 }}>Game Over!</div>}
-        <button
-          onClick={() => {
-            setGrid(emptyGrid());
-            setCurrent({
-              tetromino: randomTetromino(),
-              rotation: 0,
-              position: { x: 3, y: 0 }
-            });
-            setScore(0);
-            setGameOver(false);
-            setIntervalSpeed(INTERVAL_START);
-          }}
-          style={{ marginTop: 10, padding: "6px 12px", cursor: "pointer" }}
-        >
-          Restart
-        </button>
-      </div>
+    <div>
+      <h2 style={{ color: "white" }}>{gameOver ? "Game Over" : `Score: ${score}`}</h2>
+      <div>{renderGrid()}</div>
     </div>
   );
 }
