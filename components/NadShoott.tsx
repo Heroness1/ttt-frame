@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import TetrisBoard from "../components/TetrisBoard"; // sesuaikan path
+import TetrisBoard from "../components/TetrisBoard";
+import NeonLogo from "../components/NeonLogo";  // Import NeonLogo
 
 export default function NadShoott() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    const sound = document.getElementById("clickSound") as HTMLAudioElement | null;
+    const sound = document.getElementById("clickSound");
     const playClickSound = () => {
       if (sound) {
         sound.currentTime = 0;
@@ -28,16 +29,16 @@ export default function NadShoott() {
       <div className="w-full max-w-xl bg-gray-900 border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
         {/* Header */}
         <header className="text-center animate-fade-in-up">
-          <h1 className="text-5xl font-bold text-purple-400 neon-purple-text">Nadstris</h1>
+          <NeonLogo />
           <p className="text-sm text-gray-400 mt-2">Fill them up</p>
         </header>
 
-        {/* Ganti gambar floating sama gameplay Tetris */}
+        {/* Gameplay or Preview */}
         <section className="animate-float min-h-[480px]">
           {!isPlaying ? (
             <img
               src="/images/nadshoott-preview.png"
-              alt="..."
+              alt="Preview"
               className="rounded-lg border border-purple-400 shadow-md w-full"
             />
           ) : (
@@ -83,27 +84,18 @@ export default function NadShoott() {
         preload="auto"
       ></audio>
 
-      {/* Extra styles */}
       <style jsx>{`
-        .neon-text {
-          text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 20px #00ffff,
-            0 0 40px #00ffff;
-        }
-
         @keyframes float {
-          0%,
-          100% {
+          0%, 100% {
             transform: translateY(0);
           }
           50% {
             transform: translateY(-10px);
           }
         }
-
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
-
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -114,7 +106,6 @@ export default function NadShoott() {
             transform: translateY(0);
           }
         }
-
         .animate-fade-in-up {
           animation: fadeInUp 1s ease forwards;
         }
