@@ -148,7 +148,6 @@ export default function TetrisBoard() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [pressed, setPressed] = useState(null);
   const intervalRef = useRef(null);
 
   // Ambil highScore dari localStorage hanya di client side
@@ -277,23 +276,6 @@ export default function TetrisBoard() {
     }
   };
 
-  const btnStyle = {
-    backgroundColor: "#444",
-    border: "3px solid #999",
-    borderRadius: 4,
-    color: "#eee",
-    fontWeight: "bold",
-    fontFamily: "monospace",
-    cursor: "pointer",
-    width: 60,
-    height: 60,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "inset -2px -2px 0px #222, inset 2px 2px 0px #666",
-    transition: "transform 0.1s ease-in-out",
-  };
-
   const renderGrid = () => {
     const display = grid.map((row) => [...row]);
     const shape = current.tetromino.shape[current.rotation];
@@ -327,6 +309,18 @@ export default function TetrisBoard() {
     ));
   };
 
+  const btnStyle = {
+    backgroundColor: "#333",
+    border: "2px solid #0ff",
+    borderRadius: 6,
+    padding: "8px 12px",
+    color: "white",
+    fontWeight: "bold",
+    fontFamily: "monospace",
+    cursor: "pointer",
+    minWidth: 60,
+  };
+
   return (
     <div
       style={{
@@ -350,10 +344,14 @@ export default function TetrisBoard() {
           display: "inline-block",
         }}
       >
-        <h2 style={{ color: "white", marginBottom: 5, textAlign: "center" }}>
+        <h2
+          style={{ color: "white", marginBottom: 5, textAlign: "center" }}
+        >
           {gameOver ? "GAME OVER" : `Score: ${score}`}
         </h2>
-        <h3 style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}>
+        <h3
+          style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}
+        >
           High Score: {highScore}
         </h3>
         <div
@@ -378,37 +376,45 @@ export default function TetrisBoard() {
                 "left rot right"
                 ".   down  ."
               `,
-              gridTemplateColumns: "repeat(3, 60px)",
-              gridTemplateRows: "repeat(3, 60px)",
+              gridTemplateColumns: "repeat(3,60px)",
+              gridTemplateRows: "repeat(3,60px)",
               gap: 10,
-              width: "100%",
-              maxWidth: 220,
-              margin: "0 auto",
-              justifyItems: "center",
+              justifyContent: "right",
+              alignContent: "center",
+              width: "100%"
               userSelect: "none",
             }}
           >
-            {[
-              ["up", "▲"],
-              ["left", "◄"],
-              ["rot", "⟳"],
-              ["right", "►"],
-              ["down", "▼"],
-            ].map(([dir, label]) => (
-              <button
-                key={dir}
-                style={{
-                  ...btnStyle,
-                  transform: pressed === dir ? "scale(0.95)" : "none",
-                  gridArea: dir,
-                }}
-                onMouseDown={() => setPressed(dir)}
-                onMouseUp={() => setPressed(null)}
-                onClick={() => handleControl(dir === "rot" ? "rotate" : dir)}
-              >
-                {label}
-              </button>
-            ))}
+            <button
+              style={{ ...btnStyle, gridArea: "up" }}
+              onClick={() => handleControl("down")}
+            >
+              ▲
+            </button>
+            <button
+              style={{ ...btnStyle, gridArea: "left" }}
+              onClick={() => handleControl("left")}
+            >
+              ◄
+            </button>
+            <button
+              style={{ ...btnStyle, gridArea: "rot" }}
+              onClick={() => handleControl("rotate")}
+            >
+              ⟳
+            </button>
+            <button
+              style={{ ...btnStyle, gridArea: "right" }}
+              onClick={() => handleControl("right")}
+            >
+              ►
+            </button>
+            <button
+              style={{ ...btnStyle, gridArea: "down" }}
+              onClick={() => handleControl("down")}
+            >
+              ▼
+            </button>
           </div>
         )}
 
