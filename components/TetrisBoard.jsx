@@ -386,8 +386,6 @@ export default function TetrisBoard() {
             </button>
             <button
               style={{ ...btnStyle, gridArea: "rotate" }}
-            <button
-              style={{ ...btnStyle, gridArea: "rotate" }}
               onClick={() => handleControl("rotate")}
             >
               ⟳
