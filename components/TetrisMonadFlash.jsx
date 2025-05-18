@@ -1,105 +1,116 @@
-import React, { useState, useEffect } from "react";
+"use client";
 
-const ROWS = 10;
-const COLS = 10;
-const BLOCK_SIZE = 25;
-const FALL_INTERVAL = 60; // ms per step turun
-const NEON_PURPLE = "#bb00ff";
+import React, { useEffect, useState } from "react";
 
-const MONAD_BLOCKS = [
-  { x: 0, y: 6 }, { x: 0, y: 7 }, { x: 0, y: 8 }, { x: 0, y: 9 },
-  { x: 1, y: 6 }, { x: 2, y: 7 }, { x: 3, y: 6 }, { x: 3, y: 7 },
-  { x: 3, y: 8 }, { x: 3, y: 9 },
-  { x: 5, y: 6 }, { x: 5, y: 7 }, { x: 5, y: 8 }, { x: 5, y: 9 },
-  { x: 6, y: 6 }, { x: 7, y: 6 }, { x: 7, y: 7 }, { x: 7, y: 8 },
-  { x: 7, y: 9 }, { x: 6, y: 9 },
-];
+type Block = { x: number; y: number };
+type LetterBlocks = Block[];
 
-export default function TetrisMonadFlash() {
-  const [blocks, setBlocks] = useState(
-    MONAD_BLOCKS.map(({ x, y }) => ({ x, yCurrent: -1, yTarget: y }))
-  );
-  const [flash, setFlash] = useState(false);
+const letterPatterns: { [char: string]: LetterBlocks } = {
+  M: [ { x:0, y:0 }, { x:0, y:1 }, { x:0, y:2 }, { x:1, y:1 }, { x:2, y:0 }, { x:2, y:1 }, { x:2, y:2 } ],
+  O: [ { x:0, y:0 }, { x:0, y:1 }, { x:0, y:2 }, { x:1, y:0 }, { x:1, y:2 }, { x:2, y:0 }, { x:2, y:1 }, { x:2, y:2 } ],
+  N: [ { x:0, y:0 }, { x:0, y:1 }, { x:0, y:2 }, { x:1, y:1 }, { x:2, y:0 }, { x:2, y:1 }, { x:2, y:2 } ],
+  A: [ { x:0, y:1 }, { x:1, y:0 }, { x:1, y:1 }, { x:1, y:2 }, { x:2, y:0 }, { x:2, y:2 } ],
+  D: [ { x:0, y:0 }, { x:0, y:1 }, { x:0, y:2 }, { x:1, y:0 }, { x:1, y:2 }, { x:2, y:1 } ],
+};
 
-  // jatuhin blok
+interface TetrisMonadFlashProps {
+  word?: string;
+  boxSize?: number;
+  spacing?: number;
+  maxFallOffset?: number;
+  fallSpeed?: number;
+}
+
+export default function TetrisMonadFlash({
+  word = "MONAD",
+  boxSize = 14,
+  spacing = 1,
+  maxFallOffset = 18,
+  fallSpeed = 40,
+}: TetrisMonadFlashProps) {
+  const [fallOffsets, setFallOffsets] = useState<number[]>([]);
+
   useEffect(() => {
+    const totalBlocks = word
+      .split("")
+      .reduce((acc, char) => acc + (letterPatterns[char]?.length || 0), 0);
+    const initialOffsets = Array(totalBlocks)
+      .fill(0)
+      .map(() => Math.floor(Math.random() * maxFallOffset));
+    setFallOffsets(initialOffsets);
+
     const interval = setInterval(() => {
-      setBlocks((blocks) =>
-        blocks.map((block) => {
-          if (block.yCurrent < block.yTarget) {
-            return { ...block, yCurrent: block.yCurrent + 1 };
-          }
-          return block;
-        })
+      setFallOffsets((prev) =>
+        prev.map((offset) => Math.max(0, offset - 1))
       );
-    }, FALL_INTERVAL);
+    }, fallSpeed);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [word, maxFallOffset, fallSpeed]);
 
-  // toggle flash effect
-  useEffect(() => {
-    const flashInterval = setInterval(() => {
-      setFlash((f) => !f);
-    }, 400);
-
-    return () => clearInterval(flashInterval);
-  }, []);
-
-  const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-
-  blocks.forEach(({ x, yCurrent }) => {
-    if (x >= 0 && x < COLS && yCurrent >= 0 && yCurrent < ROWS) {
-      grid[yCurrent][x] = NEON_PURPLE;
-    }
-  });
+  let blockIndex = 0;
 
   return (
-    <div
-      style={{
-        backgroundColor: "#000",
-        padding: 20,
-        display: "inline-block",
-        borderRadius: 20,
-        border: `4px solid ${flash ? "#ff33ff" : NEON_PURPLE}`,
-        boxShadow: flash
-          ? "0 0 40px 10px #ff33ff"
-          : "0 0 30px 6px #bb00ff",
-        transition: "border-color 0.3s ease, box-shadow 0.3s ease",
-      }}
-    >
-      <div
-        style={{
-          width: COLS * BLOCK_SIZE,
-          height: ROWS * BLOCK_SIZE,
-          display: "grid",
-          gridTemplateColumns: `repeat(${COLS}, ${BLOCK_SIZE}px)`,
-          gridTemplateRows: `repeat(${ROWS}, ${BLOCK_SIZE}px)`,
-          gap: 2,
-          backgroundColor: "#111",
-          borderRadius: 12,
-          padding: 8,
-        }}
-      >
-        {grid.flatMap((row, y) =>
-          row.map((color, x) => (
-            <div
-              key={`${x}-${y}`}
-              style={{
-                width: BLOCK_SIZE,
-                height: BLOCK_SIZE,
-                backgroundColor: color || "#222",
-                border: "1px solid #440088",
-                boxShadow: color
-                  ? `0 0 8px 2px ${flash ? "#ff33ff" : NEON_PURPLE}, inset 0 0 5px ${flash ? "#ff33ff" : NEON_PURPLE}`
-                  : "none",
-                borderRadius: 3,
-                transition: "box-shadow 0.3s ease, background-color 0.3s ease",
-              }}
-            />
-          ))
-        )}
-      </div>
+    <div style={{ display: "flex", gap: `${spacing * boxSize}px`, justifyContent: "center" }}>
+      <style jsx>{`
+        .flash {
+          animation: flash 1.4s infinite alternate;
+        }
+
+        @keyframes flash {
+          0% {
+            box-shadow:
+              0 0 4px #bb00ff,
+              0 0 8px #bb00ff,
+              0 0 16px #ff77ff;
+            background-color: #a020f0;
+          }
+          100% {
+            box-shadow:
+              0 0 1px #7700aa,
+              0 0 2px #7700aa,
+              0 0 4px #aa00dd;
+            background-color: #6600aa;
+          }
+        }
+      `}</style>
+      {word.split("").map((char, letterIndex) => {
+        const blocks = letterPatterns[char] || [];
+        return (
+          <div
+            key={letterIndex}
+            style={{
+              position: "relative",
+              width: 3 * (boxSize + spacing),
+              height: 4 * (boxSize + spacing),
+            }}
+          >
+            {blocks.map((block, i) => {
+              const fallOffset = fallOffsets[blockIndex] || 0;
+              const top =
+                (block.y + fallOffset) * (boxSize + spacing);
+              const left = block.x * (boxSize + spacing);
+              const id = blockIndex;
+              blockIndex++;
+              return (
+                <div
+                  key={id}
+                  className="flash"
+                  style={{
+                    position: "absolute",
+                    top,
+                    left,
+                    width: boxSize,
+                    height: boxSize,
+                    transition: `top ${fallSpeed}ms ease-out`,
+                    borderRadius: 2,
+                  }}
+                />
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 }
