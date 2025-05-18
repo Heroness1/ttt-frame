@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 
 type Block = { x: number; y: number };
 type LetterBlocks = Block[];
@@ -25,14 +25,30 @@ const letterPatterns: { [char: string]: LetterBlocks } = {
     { x:3, y:3 },
     { x:4, y:0 }, { x:4, y:1 }, { x:4, y:2 }, { x:4, y:3 }, { x:4, y:4 },
   ],
-  
 };
+
 interface TetrisMonadFlashProps {
   word?: string;
   boxSize?: number;
   spacing?: number;
   maxFallOffset?: number;
   fallSpeed?: number;
+}
+
+// Fungsi untuk center block dalam 5x5 grid
+function centerBlocks(blocks: LetterBlocks): LetterBlocks {
+  const minX = 0;
+  const maxX = 4; // grid 5x5
+  const minY = 0;
+  const maxY = 4;
+
+  const centerX = (minX + maxX) / 2; // 2
+  const centerY = (minY + maxY) / 2; // 2
+
+  return blocks.map(({ x, y }) => ({
+    x: x - centerX,
+    y: y - centerY,
+  }));
 }
 
 export default function TetrisMonadFlash({
@@ -44,10 +60,19 @@ export default function TetrisMonadFlash({
 }: TetrisMonadFlashProps) {
   const [fallOffsets, setFallOffsets] = useState<number[]>([]);
 
+  // Membuat letterPatterns yang sudah di-center tiap huruf
+  const centeredLetterPatterns = useMemo(() => {
+    const result: { [char: string]: LetterBlocks } = {};
+    for (const char in letterPatterns) {
+      result[char] = centerBlocks(letterPatterns[char]);
+    }
+    return result;
+  }, []);
+
   useEffect(() => {
     const totalBlocks = word
       .split("")
-      .reduce((acc, char) => acc + (letterPatterns[char]?.length || 0), 0);
+      .reduce((acc, char) => acc + (centeredLetterPatterns[char]?.length || 0), 0);
     const initialOffsets = Array(totalBlocks)
       .fill(0)
       .map(() => Math.floor(Math.random() * maxFallOffset));
@@ -60,7 +85,7 @@ export default function TetrisMonadFlash({
     }, fallSpeed);
 
     return () => clearInterval(interval);
-  }, [word, maxFallOffset, fallSpeed]);
+  }, [word, maxFallOffset, fallSpeed, centeredLetterPatterns]);
 
   let blockIndex = 0;
 
@@ -89,7 +114,7 @@ export default function TetrisMonadFlash({
         }
       `}</style>
       {word.split("").map((char, letterIndex) => {
-        const blocks = letterPatterns[char] || [];
+        const blocks = centeredLetterPatterns[char] || [];
         return (
           <div
             key={letterIndex}
@@ -102,8 +127,8 @@ export default function TetrisMonadFlash({
             {blocks.map((block, i) => {
               const fallOffset = fallOffsets[blockIndex] || 0;
               const top =
-                (block.y + fallOffset) * (boxSize + spacing);
-              const left = block.x * (boxSize + spacing);
+                (block.y + 2 + fallOffset) * (boxSize + spacing);
+              const left = (block.x + 2) * (boxSize + spacing);
               const id = blockIndex;
               blockIndex++;
               return (
