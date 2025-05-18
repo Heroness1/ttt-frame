@@ -35,24 +35,30 @@ interface TetrisMonadFlashProps {
   fallSpeed?: number;
 }
 
-// Fungsi untuk center block dalam 5x5 grid
+// Fungsi untuk nge-center blok dalam kotak 5x5
 function centerBlocks(blocks: LetterBlocks): LetterBlocks {
-  const minX = 0;
-  const maxX = 4; // grid 5x5
-  const minY = 0;
-  const maxY = 4;
+  const xs = blocks.map(b => b.x);
+  const ys = blocks.map(b => b.y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
 
-  const centerX = (minX + maxX) / 2; // 2
-  const centerY = (minY + maxY) / 2; // 2
+  const width = maxX - minX;
+  const height = maxY - minY;
+
+  // Offset supaya huruf centered di posisi (2,2)
+  const offsetX = 2 - (minX + width / 2);
+  const offsetY = 2 - (minY + height / 2);
 
   return blocks.map(({ x, y }) => ({
-    x: x - centerX,
-    y: y - centerY,
+    x: x + offsetX,
+    y: y + offsetY,
   }));
 }
 
 export default function TetrisMonadFlash({
-  word = "MONAD",
+  word = "MON",
   boxSize = 14,
   spacing = 1,
   maxFallOffset = 18,
@@ -60,7 +66,7 @@ export default function TetrisMonadFlash({
 }: TetrisMonadFlashProps) {
   const [fallOffsets, setFallOffsets] = useState<number[]>([]);
 
-  // Membuat letterPatterns yang sudah di-center tiap huruf
+  // Hitung letter patterns yang sudah di-center
   const centeredLetterPatterns = useMemo(() => {
     const result: { [char: string]: LetterBlocks } = {};
     for (const char in letterPatterns) {
@@ -124,11 +130,10 @@ export default function TetrisMonadFlash({
               height: 5 * (boxSize + spacing),
             }}
           >
-            {blocks.map((block, i) => {
+            {blocks.map((block) => {
               const fallOffset = fallOffsets[blockIndex] || 0;
-              const top =
-                (block.y + 2 + fallOffset) * (boxSize + spacing);
-              const left = (block.x + 2) * (boxSize + spacing);
+              const top = (block.y + fallOffset) * (boxSize + spacing);
+              const left = block.x * (boxSize + spacing);
               const id = blockIndex;
               blockIndex++;
               return (
