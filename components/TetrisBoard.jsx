@@ -249,29 +249,54 @@ export default function TetrisBoard() {
         </div>
 
         <div
-          style={{
-            marginTop: 20,
-            display: "grid",
-            gridTemplateAreas: `
-              ".    up    ."
-              "left rot right"
-              ".   down  ."
-            `,
-            gap: 10,
-            justifyContent: "center",
-          }}
-        >
-          <button style={btnStyle} onClick={() => handleControl("left")}>LEFT</button>
-          <button style={btnStyle} onClick={() => handleControl("rotate")}>ROTATE</button>
-          <button style={btnStyle} onClick={() => handleControl("right")}>RIGHT</button>
-          <button style={btnStyle} onClick={() => handleControl("down")}>DOWN</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const btnStyle = {
+  style={{
+    marginTop: 20,
+    display: "grid",
+    gridTemplateAreas: `
+      ".    up    ."
+      "left rot right"
+      ".   down  ."
+    `,
+    gridTemplateColumns: "60px 60px 60px",
+    gridTemplateRows: "60px 60px 60px",
+    gap: 10,
+    justifyContent: "center",
+    width: 200,
+    userSelect: "none",
+  }}
+>
+  <button
+    style={{ ...btnStyle, gridArea: "up" }}
+    onClick={() => handleControl("up")}
+  >
+    ▲
+  </button>
+  <button
+    style={{ ...btnStyle, gridArea: "left" }}
+    onClick={() => handleControl("left")}
+  >
+    ◄
+  </button>
+  <button
+    style={{ ...btnStyle, gridArea: "rot" }}
+    onClick={() => handleControl("rotate")}
+  >
+    ●
+  </button>
+  <button
+    style={{ ...btnStyle, gridArea: "right" }}
+    onClick={() => handleControl("right")}
+  >
+    ►
+  </button>
+  <button
+    style={{ ...btnStyle, gridArea: "down" }}
+    onClick={() => handleControl("down")}
+  >
+    ▼
+  </button>
+</div>
+  const btnStyle = {
   backgroundColor: "#333",
   border: "2px solid #0ff",
   borderRadius: 6,
