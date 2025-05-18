@@ -379,7 +379,7 @@ export default function TetrisBoard() {
               gridTemplateColumns: "repeat(3,60px)",
               gridTemplateRows: "repeat(3,60px)",
               gap: 10,
-              justifyContent: "right",
+              justifyContent: "center",
               alignContent: "center",
               width: "100%",
               userSelect: "none",
