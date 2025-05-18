@@ -50,7 +50,7 @@ export default function NadShoott() {
 
         {/* Description */}
         <section className="text-center">
-          <p className="text-gray-300">Gmonad</p>
+          <p className="text-gray-300"></p>
         </section>
 
         {/* Buttons */}
