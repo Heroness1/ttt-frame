@@ -381,7 +381,7 @@ export default function TetrisBoard() {
               gap: 10,
               justifyContent: "right",
               alignContent: "center",
-              width: "100%"
+              width: "100%",
               userSelect: "none",
             }}
           >
