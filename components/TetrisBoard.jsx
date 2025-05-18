@@ -146,9 +146,22 @@ export default function TetrisBoard() {
     position: { x: 2, y: -1 },
   });
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem("tetris-high-score")) || 0);
+  const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const intervalRef = useRef(null);
+
+  // Ambil highScore dari localStorage hanya di client side
+  useEffect(() => {
+    const saved = localStorage.getItem("tetris-high-score");
+    if (saved) setHighScore(parseInt(saved));
+  }, []);
+
+  // Simpan highScore ke localStorage saat berubah
+  useEffect(() => {
+    if (highScore > 0) {
+      localStorage.setItem("tetris-high-score", highScore.toString());
+    }
+  }, [highScore]);
 
   const checkCollision = (x, y, rotation) => {
     const shape = current.tetromino.shape[rotation];
@@ -203,7 +216,6 @@ export default function TetrisBoard() {
         const newScore = prev + cleared * 100;
         if (newScore > highScore) {
           setHighScore(newScore);
-          localStorage.setItem("tetris-high-score", newScore.toString());
         }
         return newScore;
       });
@@ -374,7 +386,7 @@ export default function TetrisBoard() {
           >
             <button
               style={{ ...btnStyle, gridArea: "up" }}
-              onClick={() => handleControl("down")} // Up usually drop fast, I map to "down"
+              onClick={() => handleControl("down")}
             >
               ▲
             </button>
