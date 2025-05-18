@@ -2,8 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import TetrisBoard from "../components/TetrisBoard"; //
-import SupController from "../components/SupController"; 
+import TetrisMonadFlash from "./components/TetrisMonadFlash";
 
 function NeonLogo() {
   return (
@@ -40,21 +39,17 @@ export default function NadShoott() {
         {/* Header */}
         <header className="text-center animate-fade-in-up">
           <NeonLogo />
-          <p className="text-sm text-gray-400 mt-2">FILLMON</p>
+          <p className="text-sm text-gray-400 mt-2">Break Monad v2</p>
         </header>
 
-        {/* Floating image */}
-        <section className="animate-float">
-          <img
-            src="/images/nadshoott-preview.png"
-            alt="..."
-            className="rounded-lg border border-purple-400 shadow-md w-full"
-          />
+        {/* Tetris neon static with fast falling animation */}
+        <section>
+          <TetrisMonadFlash />
         </section>
 
         {/* Description */}
         <section className="text-center">
-          <p className="text-gray-300">They coming!</p>
+          <p className="text-gray-300">Gmonad</p>
         </section>
 
         {/* Buttons */}
@@ -69,7 +64,7 @@ export default function NadShoott() {
 
         {/* Footer */}
         <footer className="text-center text-xs text-gray-600 pt-4 border-t border-gray-700">
-          © 2025 Lure369.nad
+           2025 by Lure369.nad
         </footer>
       </div>
 
@@ -89,19 +84,6 @@ export default function NadShoott() {
             0 0 40px #ff77ff,
             0 0 80px #ff77ff;
           color: #e600e6;
-        }
-
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
         }
 
         @keyframes fadeInUp {
