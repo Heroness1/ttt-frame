@@ -148,6 +148,7 @@ export default function TetrisBoard() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [pressed, setPressed] = useState(null);
   const intervalRef = useRef(null);
 
   // Ambil highScore dari localStorage hanya di client side
@@ -310,15 +311,53 @@ export default function TetrisBoard() {
   };
 
   const btnStyle = {
-    backgroundColor: "#333",
-    border: "2px solid #0ff",
-    borderRadius: 6,
-    padding: "8px 12px",
-    color: "white",
+    backgroundColor: "#444",
+    border: "3px solid #999",
+    borderRadius: 4,
+    color: "#eee",
     fontWeight: "bold",
     fontFamily: "monospace",
     cursor: "pointer",
-    minWidth: 60,
+    width: 60,
+    height: 60,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "inset -2px -2px 0px #222, inset 2px 2px 0px #666",
+    transition: "transform 0.1s ease-in-out",
+  };
+
+  const renderGrid = () => {
+    const display = grid.map((row) => [...row]);
+    const shape = current.tetromino.shape[current.rotation];
+    const { x, y } = current.position;
+    shape.forEach((row, dy) => {
+      row.forEach((cell, dx) => {
+        if (cell) {
+          const newY = y + dy;
+          const newX = x + dx;
+          if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
+            display[newY][newX] = current.tetromino.color;
+          }
+        }
+      });
+    });
+    return display.map((row, yIdx) => (
+      <div key={yIdx} style={{ display: "flex" }}>
+        {row.map((cell, xIdx) => (
+          <div
+            key={xIdx}
+            style={{
+              width: 25,
+              height: 25,
+              backgroundColor: cell || "#222",
+              border: "1px solid #444",
+              boxSizing: "border-box",
+            }}
+          />
+        ))}
+      </div>
+    ));
   };
 
   return (
@@ -344,14 +383,10 @@ export default function TetrisBoard() {
           display: "inline-block",
         }}
       >
-        <h2
-          style={{ color: "white", marginBottom: 5, textAlign: "center" }}
-        >
+        <h2 style={{ color: "white", marginBottom: 5, textAlign: "center" }}>
           {gameOver ? "GAME OVER" : `Score: ${score}`}
         </h2>
-        <h3
-          style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}
-        >
+        <h3 style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}>
           High Score: {highScore}
         </h3>
         <div
@@ -369,51 +404,44 @@ export default function TetrisBoard() {
         {!gameOver && (
           <div
             style={{
-              marginTop: 20,
+              marginTop: 30,
               display: "grid",
               gridTemplateAreas: `
                 ".    up    ."
                 "left rot right"
                 ".   down  ."
               `,
-              gridTemplateColumns: "60px 60px 60px",
-              gridTemplateRows: "60px 60px 60px",
+              gridTemplateColumns: "repeat(3, 60px)",
+              gridTemplateRows: "repeat(3, 60px)",
               gap: 10,
-              justifyContent: "right",
-              width: 200,
+              width: "100%",
+              maxWidth: 220,
+              margin: "0 auto",
+              justifyItems: "center",
               userSelect: "none",
             }}
           >
-            <button
-              style={{ ...btnStyle, gridArea: "up" }}
-              onClick={() => handleControl("down")}
-            >
-              ▲
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "left" }}
-              onClick={() => handleControl("left")}
-            >
-              ◄
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "rot" }}
-              onClick={() => handleControl("rotate")}
-            >
-              ⟳
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "right" }}
-              onClick={() => handleControl("right")}
-            >
-              ►
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "down" }}
-              onClick={() => handleControl("down")}
-            >
-              ▼
-            </button>
+            {[
+              ["up", "▲"],
+              ["left", "◄"],
+              ["rot", "⟳"],
+              ["right", "►"],
+              ["down", "▼"],
+            ].map(([dir, label]) => (
+              <button
+                key={dir}
+                style={{
+                  ...btnStyle,
+                  transform: pressed === dir ? "scale(0.95)" : "none",
+                  gridArea: dir,
+                }}
+                onMouseDown={() => setPressed(dir)}
+                onMouseUp={() => setPressed(null)}
+                onClick={() => handleControl(dir === "rot" ? "rotate" : dir)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         )}
 
