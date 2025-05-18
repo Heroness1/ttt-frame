@@ -368,53 +368,27 @@ export default function TetrisBoard() {
 
         {!gameOver && (
           <div
-            style={{
-              marginTop: 20,
-              display: "grid",
-              gridTemplateAreas: `
-                ".    up    ."
-                "left rot right"
-                ".   down  ."
-              `,
-              gridTemplateColumns: "60px 60px 60px",
-              gridTemplateRows: "60px 60px 60px",
-              gap: 10,
-              justifyContent: "center",
-              width: 200,
-              userSelect: "none",
-            }}
-          >
-            <button
-              style={{ ...btnStyle, gridArea: "up" }}
-              onClick={() => handleControl("down")}
-            >
-              ▲
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "left" }}
-              onClick={() => handleControl("left")}
-            >
-              ◄
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "rotate" }}
-              onClick={() => handleControl("rotate")}
-            >
-              ⟳
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "right" }}
-              onClick={() => handleControl("right")}
-            >
-              ►
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "down" }}
-              onClick={() => handleControl("down")}
-            >
-              ▼
-            </button>
-          </div>
+  style={{
+    display: "grid",
+    gridTemplateAreas: `
+      ".     up    ."
+      "left rot right"
+      ".    down   ."
+    `,
+    gridTemplateColumns: "60px 60px 60px",
+    gridTemplateRows: "60px 60px 60px",
+    gap: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 40,
+  }}
+>
+  <button style={{ gridArea: "up" }} onClick={moveUp}>▲</button>
+  <button style={{ gridArea: "left" }} onClick={moveLeft}>◄</button>
+  <button style={{ gridArea: "right" }} onClick={moveRight}>►</button>
+  <button style={{ gridArea: "down" }} onClick={moveDown}>▼</button>
+  <button style={{ gridArea: "rot" }} onClick={rotate}>↻</button>
+</div>
         )}
 
         {gameOver && (
