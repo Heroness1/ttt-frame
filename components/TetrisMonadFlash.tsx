@@ -40,6 +40,7 @@ const letterPatterns: { [char: string]: LetterBlocks } = {
     { x:4, y:2 },
   ],
 };
+
 interface TetrisMonadFlashProps {
   word?: string;
   boxSize?: number;
@@ -56,8 +57,10 @@ export default function TetrisMonadFlash({
   fallSpeed = 40,
 }: TetrisMonadFlashProps) {
   const [fallOffsets, setFallOffsets] = useState<number[]>([]);
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
+    // Init fall offsets
     const totalBlocks = word
       .split("")
       .reduce((acc, char) => acc + (letterPatterns[char]?.length || 0), 0);
@@ -66,78 +69,105 @@ export default function TetrisMonadFlash({
       .map(() => Math.floor(Math.random() * maxFallOffset));
     setFallOffsets(initialOffsets);
 
+    // Handle falling animation
     const interval = setInterval(() => {
       setFallOffsets((prev) =>
         prev.map((offset) => Math.max(0, offset - 1))
       );
     }, fallSpeed);
 
-    return () => clearInterval(interval);
-  }, [word, maxFallOffset, fallSpeed]);
+    // Handle scaling on mount and resize
+    const handleResize = () => {
+      const containerWidth = window.innerWidth;
+      const letterWidth = (boxSize + spacing) * 5;
+      const totalWidth = letterWidth * word.length + spacing * boxSize * (word.length - 1);
+      const newScale = Math.min(1, containerWidth / totalWidth);
+      setScale(newScale);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [word, boxSize, spacing, maxFallOffset, fallSpeed]);
 
   let blockIndex = 0;
 
   return (
-    <div style={{ display: "flex", gap: `${spacing * boxSize}px`, justifyContent: "center" }}>
-      <style jsx>{`
-        .flash {
-          animation: flash 1.4s infinite alternate;
-        }
+    <div style={{ width: '100%', overflow: 'hidden' }}>
+      <div
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: 'top center',
+          display: "flex",
+          gap: `${spacing * boxSize}px`,
+          justifyContent: "center",
+        }}
+      >
+        <style jsx>{`
+          .flash {
+            animation: flash 1.4s infinite alternate;
+          }
 
-        @keyframes flash {
-          0% {
-            box-shadow:
-              0 0 4px #bb00ff,
-              0 0 8px #bb00ff,
-              0 0 16px #ff77ff;
-            background-color: #a020f0;
+          @keyframes flash {
+            0% {
+              box-shadow:
+                0 0 4px #bb00ff,
+                0 0 8px #bb00ff,
+                0 0 16px #ff77ff;
+              background-color: #a020f0;
+            }
+            100% {
+              box-shadow:
+                0 0 1px #7700aa,
+                0 0 2px #7700aa,
+                0 0 4px #aa00dd;
+              background-color: #6600aa;
+            }
           }
-          100% {
-            box-shadow:
-              0 0 1px #7700aa,
-              0 0 2px #7700aa,
-              0 0 4px #aa00dd;
-            background-color: #6600aa;
-          }
-        }
-      `}</style>
-      {word.split("").map((char, letterIndex) => {
-        const blocks = letterPatterns[char] || [];
-        return (
-          <div
-            key={letterIndex}
-            style={{
-              position: "relative",
-              width: 5 * (boxSize + spacing),
-              height: 5 * (boxSize + spacing),
-            }}
-          >
-            {blocks.map((block, i) => {
-              const fallOffset = fallOffsets[blockIndex] || 0;
-              const top =
-                (block.y + fallOffset) * (boxSize + spacing);
-              const left = block.x * (boxSize + spacing);
-              const id = blockIndex;
-              blockIndex++;
-              return (
-                <div
-                  key={id}
-                  className="flash"
-                  style={{
-                    position: "absolute",
-                    top,
-                    left,
-                    width: boxSize,
-                    height: boxSize,
-                    transition: `top ${fallSpeed}ms ease-out`,
-                    borderRadius: 2,
-                  }}
-                />
-              );
-            })}
-          </div>
-        );
-      })}
+        `}</style>
+
+        {word.split("").map((char, letterIndex) => {
+          const blocks = letterPatterns[char] || [];
+          return (
+            <div
+              key={letterIndex}
+              style={{
+                position: "relative",
+                width: 5 * (boxSize + spacing),
+                height: 5 * (boxSize + spacing),
+              }}
+            >
+              {blocks.map((block) => {
+                const fallOffset = fallOffsets[blockIndex] || 0;
+                const top =
+                  (block.y + fallOffset) * (boxSize + spacing);
+                const left = block.x * (boxSize + spacing);
+                const id = blockIndex;
+                blockIndex++;
+                return (
+                  <div
+                    key={id}
+                    className="flash"
+                    style={{
+                      position: "absolute",
+                      top,
+                      left,
+                      width: boxSize,
+                      height: boxSize,
+                      transition: `top ${fallSpeed}ms ease-out`,
+                      borderRadius: 2,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
