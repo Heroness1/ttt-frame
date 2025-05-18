@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import TetrisMonadFlash from "./components/TetrisMonadFlash";
+import TetrisMonadFlash from "../components/TetrisMonadFlash";
 
 function NeonLogo() {
   return (
