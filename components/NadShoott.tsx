@@ -43,9 +43,10 @@ export default function NadShoott() {
         </header>
 
         {/* Tetris neon static with fast falling animation */}
-        <section>
-          <TetrisMonadFlash />
-        </section>
+       <section className="flex justify-center">
+         <TetrisMonadFlash boxSize={14} spacing={1} />
+       </section>
+
 
         {/* Description */}
         <section className="text-center">
