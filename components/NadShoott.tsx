@@ -7,7 +7,7 @@ import TetrisMonadFlash from "../components/TetrisMonadFlash";
 function NeonLogo() {
   return (
     <h1 className="text-5xl font-bold text-purple-400 neon-purple-text">
-      TetraMON
+      Tetra
     </h1>
   );
 }
@@ -65,7 +65,7 @@ export default function NadShoott() {
 
         {/* Footer */}
         <footer className="text-center text-xs text-gray-600 pt-4 border-t border-gray-700">
-           2025 by Lure369.nad
+           TetraMON by Lure369.nad
         </footer>
       </div>
 
