@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import TetrisMonadFlash from "../components/TetrisMonadFlash";
 
@@ -14,6 +14,8 @@ function NeonLogo() {
 
 export default function NadShoott() {
   const router = useRouter();
+  const typewriterRef = useRef<HTMLParagraphElement>(null);
+  const text = "Break Monad v2 - Ready to unleash your skills?";
 
   useEffect(() => {
     const sound = document.getElementById("clickSound") as HTMLAudioElement | null;
@@ -23,37 +25,39 @@ export default function NadShoott() {
         sound.play();
       }
     };
-
     const buttons = document.querySelectorAll("button");
     buttons.forEach((btn) => btn.addEventListener("click", playClickSound));
+    return () => buttons.forEach((btn) => btn.removeEventListener("click", playClickSound));
+  }, []);
 
-    return () => {
-      buttons.forEach((btn) => btn.removeEventListener("click", playClickSound));
-    };
+  useEffect(() => {
+    const delay = 1000;
+    const timeout = setTimeout(() => {
+      const el = typewriterRef.current;
+      if (!el) return;
+      let index = 0;
+      el.textContent = "";
+      const interval = setInterval(() => {
+        el.textContent += text.charAt(index);
+        index++;
+        if (index === text.length) clearInterval(interval);
+      }, 100);
+    }, delay);
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
     <div className="text-white min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-xl bg-gray-900 border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
-
-        {/* Header */}
         <header className="text-center animate-fade-in-up">
           <NeonLogo />
-          <p className="text-sm text-gray-400 mt-2">Break Monad v2</p>
+          <p className="text-sm mt-2 hot-pink-text" ref={typewriterRef}></p>
         </header>
 
-        {/* Tetris neon static with fast falling animation */}
-       <section className="flex justify-center">
-         <TetrisMonadFlash boxSize={14} spacing={1} />
-       </section>
-
-
-        {/* Description */}
-        <section className="text-center">
-          <p className="text-gray-300"></p>
+        <section className="flex justify-center">
+          <TetrisMonadFlash boxSize={14} spacing={1} />
         </section>
 
-        {/* Buttons */}
         <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <button
             onClick={() => router.push("/game")}
@@ -63,9 +67,8 @@ export default function NadShoott() {
           </button>
         </section>
 
-        {/* Footer */}
         <footer className="text-center text-xs text-gray-600 pt-4 border-t border-gray-700">
-           TetraMON by Lure369.nad
+          TetraMON by Lure369.nad
         </footer>
       </div>
 
@@ -75,7 +78,6 @@ export default function NadShoott() {
         preload="auto"
       ></audio>
 
-      {/* Extra styles */}
       <style jsx>{`
         .neon-purple-text {
           text-shadow:
@@ -85,6 +87,13 @@ export default function NadShoott() {
             0 0 40px #ff77ff,
             0 0 80px #ff77ff;
           color: #e600e6;
+        }
+
+        .hot-pink-text {
+          color: #FF69B4;
+          text-shadow:
+            0 0 5px #FF69B4,
+            0 0 10px #FF69B4;
         }
 
         @keyframes fadeInUp {
