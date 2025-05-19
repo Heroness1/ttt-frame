@@ -15,7 +15,7 @@ function NeonLogo() {
 export default function NadShoott() {
   const router = useRouter();
   const typewriterRef = useRef<HTMLParagraphElement>(null);
-  const text = "Break Monad v2 - Ready to unleash your skills?";
+  const text = "Break Monad v2";
 
   useEffect(() => {
     const sound = document.getElementById("clickSound") as HTMLAudioElement | null;
@@ -49,6 +49,7 @@ export default function NadShoott() {
   return (
     <div className="text-white min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-xl bg-gray-900 border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
+
         <header className="text-center animate-fade-in-up">
           <NeonLogo />
           <p className="text-sm mt-2 hot-pink-text" ref={typewriterRef}></p>
@@ -58,10 +59,21 @@ export default function NadShoott() {
           <TetrisMonadFlash boxSize={14} spacing={1} />
         </section>
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <section className="grid grid-cols-1 sm:grid-cols-2 max-w-md mx-auto gap-3 justify-center">
           <button
             onClick={() => router.push("/game")}
-            className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-3 rounded transition"
+            className="
+              bg-cyan-500 
+              hover:bg-cyan-600 
+              text-black 
+              font-bold 
+              py-3 
+              rounded-2xl 
+              shadow-[0_0_10px_rgba(0,255,255,0.7)] 
+              hover:shadow-[0_0_20px_rgba(0,255,255,0.9)] 
+              transition 
+              duration-300
+            "
           >
             Play Now
           </button>
