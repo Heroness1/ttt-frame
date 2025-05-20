@@ -55,7 +55,7 @@ export default function TetrisBoard() {
         });
 
         newGrid = applyExplosions(newGrid, explosions);
-        newGrid = clearRows(newGrid, setScore, setHighScore);
+        newGrid = clearRows(newGrid, setScore, highScore, setHighScore);
 
         setGrid(newGrid);
 
