@@ -1,144 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-
-const ROWS = 14;
-const COLS = 10;
-const INTERVAL = 700;
-
-const TETROMINOS = {
-  I: {
-    shape: [
-      [
-        [0, 0, 0, 0],
-        [1, 1, 1, 1],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-      ],
-      [
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-      ],
-    ],
-    color: "cyan",
-  },
-  O: { shape: [[[1, 1], [1, 1]]], color: "yellow" },
-  T: {
-    shape: [
-      [
-        [0, 1, 0],
-        [1, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 1],
-        [0, 1, 0],
-      ],
-      [
-        [0, 0, 0],
-        [1, 1, 1],
-        [0, 1, 0],
-      ],
-      [
-        [0, 1, 0],
-        [1, 1, 0],
-        [0, 1, 0],
-      ],
-    ],
-    color: "purple",
-  },
-  S: {
-    shape: [
-      [
-        [0, 1, 1],
-        [1, 1, 0],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 1],
-        [0, 0, 1],
-      ],
-    ],
-    color: "green",
-  },
-  Z: {
-    shape: [
-      [
-        [1, 1, 0],
-        [0, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 0, 1],
-        [0, 1, 1],
-        [0, 1, 0],
-      ],
-    ],
-    color: "red",
-  },
-  J: {
-    shape: [
-      [
-        [1, 0, 0],
-        [1, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 1],
-        [0, 1, 0],
-        [0, 1, 0],
-      ],
-      [
-        [0, 0, 0],
-        [1, 1, 1],
-        [0, 0, 1],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 0],
-        [1, 1, 0],
-      ],
-    ],
-    color: "blue",
-  },
-  L: {
-    shape: [
-      [
-        [0, 0, 1],
-        [1, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 0],
-        [0, 1, 1],
-      ],
-      [
-        [0, 0, 0],
-        [1, 1, 1],
-        [1, 0, 0],
-      ],
-      [
-        [1, 1, 0],
-        [0, 1, 0],
-        [0, 1, 0],
-      ],
-    ],
-    color: "orange",
-  },
-};
-
-const randomTetromino = () => {
-  const keys = Object.keys(TETROMINOS);
-  const rand = keys[Math.floor(Math.random() * keys.length)];
-  return { ...TETROMINOS[rand], name: rand };
-};
-
-const emptyGrid = () => Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-
-const copyGrid = (grid) => grid.map((row) => [...row]);
+import { ROWS, COLS, INTERVAL } from "./constants";
+import { randomTetromino, TETROMINOS } from "./tetrominos";
+import {
+  emptyGrid,
+  checkCollision,
+  placeTetromino,
+  clearRows,
+} from "./gridUtils";
+import { findExplosions, applyExplosions } from "./explosionUtils";
 
 export default function TetrisBoard() {
   const [grid, setGrid] = useState(emptyGrid());
@@ -165,144 +34,29 @@ export default function TetrisBoard() {
     }
   }, [highScore]);
 
-  const checkCollision = (x, y, rotation) => {
-    const shape = current.tetromino.shape[rotation];
-    for (let row = 0; row < shape.length; row++) {
-      for (let col = 0; col < shape[row].length; col++) {
-        if (shape[row][col]) {
-          const newX = x + col;
-          const newY = y + row;
-          if (
-            newX < 0 ||
-            newX >= COLS ||
-            newY >= ROWS ||
-            (newY >= 0 && grid[newY][newX])
-          )
-            return true;
-        }
-      }
-    }
-    return false;
-  };
-
-  const placeTetromino = (board, tetromino, rotation, position) => {
-    const newGrid = copyGrid(board);
-    const shape = tetromino.shape[rotation];
-    const { x, y } = position;
-    shape.forEach((row, dy) => {
-      row.forEach((cell, dx) => {
-        if (cell) {
-          const newY = y + dy;
-          const newX = x + dx;
-          if (newY >= 0) newGrid[newY][newX] = tetromino.color;
-        }
-      });
-    });
-    return newGrid;
-  };
-
-  const findExplosions = (board) => {
-    const visited = Array.from({ length: ROWS }, () =>
-      Array(COLS).fill(false)
-    );
-    const directions = [
-      [0, 1],
-      [1, 0],
-      [-1, 0],
-      [0, -1],
-    ];
-    let explosions = [];
-
-    const dfs = (x, y, color, group) => {
-      if (
-        x < 0 ||
-        x >= COLS ||
-        y < 0 ||
-        y >= ROWS ||
-        visited[y][x] ||
-        board[y][x] !== color
-      )
-        return;
-      visited[y][x] = true;
-      group.push({ x, y });
-      directions.forEach(([dx, dy]) => dfs(x + dx, y + dy, color, group));
-    };
-
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        if (board[y][x] && !visited[y][x]) {
-          let group = [];
-          dfs(x, y, board[y][x], group);
-          if (group.length >= 3) {
-            explosions = explosions.concat(group);
-          }
-        }
-      }
-    }
-    return explosions;
-  };
-
-  const applyExplosions = (board, explodedCells) => {
-    const newGrid = copyGrid(board);
-    explodedCells.forEach(({ x, y }) => {
-      newGrid[y][x] = null;
-    });
-
-    for (let x = 0; x < COLS; x++) {
-      let stack = [];
-      for (let y = ROWS - 1; y >= 0; y--) {
-        if (newGrid[y][x]) stack.push(newGrid[y][x]);
-      }
-      for (let y = ROWS - 1; y >= 0; y--) {
-        newGrid[y][x] = stack.length > 0 ? stack.shift() : null;
-      }
-    }
-    return newGrid;
-  };
-
-  const clearRows = (board) => {
-    let cleared = 0;
-    const newBoard = board.filter((row) => {
-      if (row.every((cell) => cell !== null)) {
-        cleared++;
-        return false;
-      }
-      return true;
-    });
-    while (newBoard.length < ROWS) {
-      newBoard.unshift(Array(COLS).fill(null));
-    }
-    if (cleared > 0) {
-      setScore((prev) => {
-        const newScore = prev + cleared * 100;
-        if (newScore > highScore) {
-          setHighScore(newScore);
-        }
-        return newScore;
-      });
-    }
-    return newBoard;
-  };
-
   const tick = () => {
     if (gameOver) return;
+
     const { x, y } = current.position;
-    if (!checkCollision(x, y + 1, current.rotation)) {
+    if (!checkCollision(grid, current.tetromino, current.rotation, x, y + 1)) {
       setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
     } else {
       let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
-      const explosions = findExplosions(newGrid);
 
+      const explosions = findExplosions(newGrid);
       if (explosions.length > 0) {
-        setExplodingCells(explosions.map(({x,y}) => ({x,y,color:newGrid[y][x]})));
+        setExplodingCells(explosions.map(({ x, y }) => ({ x, y, color: newGrid[y][x] })));
+
         setCombo((prev) => prev + 1);
+
         setScore((prev) => {
           const comboBonus = combo > 0 ? combo * 50 : 0;
           return prev + explosions.length * 20 + comboBonus;
         });
 
         newGrid = applyExplosions(newGrid, explosions);
-        newGrid = clearRows(newGrid);
+        newGrid = clearRows(newGrid, setScore, setHighScore);
+
         setGrid(newGrid);
 
         setTimeout(() => {
@@ -315,7 +69,7 @@ export default function TetrisBoard() {
           position: { x: 3, y: -1 },
         });
       } else {
-        newGrid = clearRows(newGrid);
+        newGrid = clearRows(newGrid, setScore, setHighScore);
         setGrid(newGrid);
         setCombo(0);
         setCurrent({
@@ -324,7 +78,8 @@ export default function TetrisBoard() {
           position: { x: 3, y: -1 },
         });
       }
-      if (checkCollision(3, 0, 0)) {
+
+      if (checkCollision(newGrid, current.tetromino, 0, 3, 0)) {
         setGameOver(true);
         clearInterval(intervalRef.current);
       }
@@ -332,30 +87,28 @@ export default function TetrisBoard() {
   };
 
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      tick();
-    }, INTERVAL);
-
+    intervalRef.current = setInterval(tick, INTERVAL);
     return () => clearInterval(intervalRef.current);
-  });
+  }, [grid, current, gameOver, combo]);
 
+  // Movement handlers (move, rotate, drop)
   const rotate = () => {
     const newRotation = (current.rotation + 1) % current.tetromino.shape.length;
-    if (!checkCollision(current.position.x, current.position.y, newRotation)) {
+    if (!checkCollision(grid, current.tetromino, newRotation, current.position.x, current.position.y)) {
       setCurrent((c) => ({ ...c, rotation: newRotation }));
     }
   };
 
   const move = (dir) => {
     const newX = current.position.x + dir;
-    if (!checkCollision(newX, current.position.y, current.rotation)) {
+    if (!checkCollision(grid, current.tetromino, current.rotation, newX, current.position.y)) {
       setCurrent((c) => ({ ...c, position: { x: newX, y: c.position.y } }));
     }
   };
 
   const drop = () => {
     let newY = current.position.y;
-    while (!checkCollision(current.position.x, newY + 1, current.rotation)) {
+    while (!checkCollision(grid, current.tetromino, current.rotation, current.position.x, newY + 1)) {
       newY++;
     }
     setCurrent((c) => ({ ...c, position: { x: c.position.x, y: newY } }));
@@ -409,7 +162,7 @@ export default function TetrisBoard() {
         {grid.map((row, y) =>
           row.map((cell, x) => {
             let color = cell;
-            explodingCells.forEach(({x: ex, y: ey, color: c}) => {
+            explodingCells.forEach(({ x: ex, y: ey, color: c }) => {
               if (ex === x && ey === y) color = c;
             });
             return (
@@ -420,9 +173,7 @@ export default function TetrisBoard() {
                   height: 30,
                   backgroundColor: color || "#111",
                   borderRadius: 4,
-                  boxShadow: color
-                    ? "0 0 8px 2px " + color
-                    : "inset 0 0 4px #000",
+                  boxShadow: color ? "0 0 8px 2px " + color : "inset 0 0 4px #000",
                   transition: "background-color 0.3s",
                 }}
               />
@@ -488,34 +239,19 @@ export default function TetrisBoard() {
           userSelect: "none",
         }}
       >
-        <button
-          style={{ ...btnStyle, gridArea: "up" }}
-          onClick={() => handleControl("down")}
-        >
+        <button style={{ ...btnStyle, gridArea: "up" }} onClick={() => handleControl("down")}>
           ▲
         </button>
-        <button
-          style={{ ...btnStyle, gridArea: "left" }}
-          onClick={() => handleControl("left")}
-        >
+        <button style={{ ...btnStyle, gridArea: "left" }} onClick={() => handleControl("left")}>
           ◄
         </button>
-        <button
-          style={{ ...btnStyle, gridArea: "rot" }}
-          onClick={() => handleControl("rotate")}
-        >
+        <button style={{ ...btnStyle, gridArea: "rot" }} onClick={() => handleControl("rotate")}>
           ⟳
         </button>
-        <button
-          style={{ ...btnStyle, gridArea: "right" }}
-          onClick={() => handleControl("right")}
-        >
+        <button style={{ ...btnStyle, gridArea: "right" }} onClick={() => handleControl("right")}>
           ►
         </button>
-        <button
-          style={{ ...btnStyle, gridArea: "down" }}
-          onClick={() => handleControl("down")}
-        >
+        <button style={{ ...btnStyle, gridArea: "down" }} onClick={() => handleControl("down")}>
           ▼
         </button>
       </div>
@@ -532,11 +268,12 @@ export default function TetrisBoard() {
               rotation: 0,
               position: { x: 3, y: -1 },
             });
+            intervalRef.current = setInterval(tick, INTERVAL);
           }}
         >
           Restart
         </button>
       )}
-    </div>  
+    </div>
   );
 }
