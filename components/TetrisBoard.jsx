@@ -198,11 +198,12 @@ if (checkCollision(newGrid, next, 0, startPos)) {
   setGameOver(true);
   clearInterval(intervalRef.current);
 } else {
-  setCurrent({ tetromino: next, rotation: 0, position: startPos });
-}
+    setCurrent({ tetromino: next, rotation: 0, position: startPos });
+  }
+}; 
 
-  // Game loop
-  useEffect(() => {
+// Game loop
+useEffect(() => {
     if (gameOver) return;
     intervalRef.current = setInterval(tick, 700);
     return () => clearInterval(intervalRef.current);
