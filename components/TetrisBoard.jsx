@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import "./TetrisStyles.css";
 
 const ROWS = 10;
 const COLS = 10;
@@ -7,124 +8,53 @@ const INTERVAL = 700;
 const TETROMINOS = {
   I: {
     shape: [
-      [
-        [0, 0, 0, 0],
-        [1, 1, 1, 1],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-      ],
-      [
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-      ],
+      [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
+      [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
     ],
     color: "cyan",
   },
-  O: { shape: [[[1, 1], [1, 1]]], color: "yellow" },
+  O: {
+    shape: [[[1, 1], [1, 1]]],
+    color: "yellow",
+  },
   T: {
     shape: [
-      [
-        [0, 1, 0],
-        [1, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 1],
-        [0, 1, 0],
-      ],
-      [
-        [0, 0, 0],
-        [1, 1, 1],
-        [0, 1, 0],
-      ],
-      [
-        [0, 1, 0],
-        [1, 1, 0],
-        [0, 1, 0],
-      ],
+      [[0, 1, 0], [1, 1, 1], [0, 0, 0]],
+      [[0, 1, 0], [0, 1, 1], [0, 1, 0]],
+      [[0, 0, 0], [1, 1, 1], [0, 1, 0]],
+      [[0, 1, 0], [1, 1, 0], [0, 1, 0]],
     ],
     color: "purple",
   },
   S: {
     shape: [
-      [
-        [0, 1, 1],
-        [1, 1, 0],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 1],
-        [0, 0, 1],
-      ],
+      [[0, 1, 1], [1, 1, 0], [0, 0, 0]],
+      [[0, 1, 0], [0, 1, 1], [0, 0, 1]],
     ],
     color: "green",
   },
   Z: {
     shape: [
-      [
-        [1, 1, 0],
-        [0, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 0, 1],
-        [0, 1, 1],
-        [0, 1, 0],
-      ],
+      [[1, 1, 0], [0, 1, 1], [0, 0, 0]],
+      [[0, 0, 1], [0, 1, 1], [0, 1, 0]],
     ],
     color: "red",
   },
   J: {
     shape: [
-      [
-        [1, 0, 0],
-        [1, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 1],
-        [0, 1, 0],
-        [0, 1, 0],
-      ],
-      [
-        [0, 0, 0],
-        [1, 1, 1],
-        [0, 0, 1],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 0],
-        [1, 1, 0],
-      ],
+      [[1, 0, 0], [1, 1, 1], [0, 0, 0]],
+      [[0, 1, 1], [0, 1, 0], [0, 1, 0]],
+      [[0, 0, 0], [1, 1, 1], [0, 0, 1]],
+      [[0, 1, 0], [0, 1, 0], [1, 1, 0]],
     ],
     color: "blue",
   },
   L: {
     shape: [
-      [
-        [0, 0, 1],
-        [1, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 0],
-        [0, 1, 1],
-      ],
-      [
-        [0, 0, 0],
-        [1, 1, 1],
-        [1, 0, 0],
-      ],
-      [
-        [1, 1, 0],
-        [0, 1, 0],
-        [0, 1, 0],
-      ],
+      [[0, 0, 1], [1, 1, 1], [0, 0, 0]],
+      [[0, 1, 0], [0, 1, 0], [0, 1, 1]],
+      [[0, 0, 0], [1, 1, 1], [1, 0, 0]],
+      [[1, 1, 0], [0, 1, 0], [0, 1, 0]],
     ],
     color: "orange",
   },
@@ -136,31 +66,29 @@ const randomTetromino = () => {
   return { ...TETROMINOS[rand], name: rand };
 };
 
-const emptyGrid = () => Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+const emptyGrid = () =>
+  Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 
 export default function TetrisBoard() {
   const [grid, setGrid] = useState(emptyGrid());
   const [current, setCurrent] = useState({
     tetromino: randomTetromino(),
     rotation: 0,
-    position: { x: 2, y: -1 },
+    position: { x: 3, y: 0 },
   });
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const intervalRef = useRef(null);
 
-  // Ambil highScore dari localStorage hanya di client side
   useEffect(() => {
     const saved = localStorage.getItem("tetris-high-score");
     if (saved) setHighScore(parseInt(saved));
   }, []);
 
-  // Simpan highScore ke localStorage saat berubah
   useEffect(() => {
-    if (highScore > 0) {
+    if (highScore > 0)
       localStorage.setItem("tetris-high-score", highScore.toString());
-    }
   }, [highScore]);
 
   const checkCollision = (x, y, rotation) => {
@@ -208,18 +136,19 @@ export default function TetrisBoard() {
       }
       return true;
     });
+
     while (newBoard.length < ROWS) {
       newBoard.unshift(Array(COLS).fill(null));
     }
+
     if (cleared > 0) {
       setScore((prev) => {
         const newScore = prev + cleared * 100;
-        if (newScore > highScore) {
-          setHighScore(newScore);
-        }
+        if (newScore > highScore) setHighScore(newScore);
         return newScore;
       });
     }
+
     return newBoard;
   };
 
@@ -232,6 +161,7 @@ export default function TetrisBoard() {
       const newGrid = placeTetromino();
       const cleared = clearRows(newGrid);
       setGrid(cleared);
+
       const next = randomTetromino();
       const startPos = { x: 3, y: 0 };
       if (checkCollision(startPos.x, startPos.y, 0)) {
@@ -253,6 +183,7 @@ export default function TetrisBoard() {
     if (gameOver) return;
     const { x, y } = current.position;
     let rotation = current.rotation;
+
     switch (direction) {
       case "left":
         if (!checkCollision(x - 1, y, rotation))
@@ -280,28 +211,36 @@ export default function TetrisBoard() {
     const display = grid.map((row) => [...row]);
     const shape = current.tetromino.shape[current.rotation];
     const { x, y } = current.position;
+
     shape.forEach((row, dy) => {
       row.forEach((cell, dx) => {
         if (cell) {
           const newY = y + dy;
           const newX = x + dx;
-          if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
+          if (
+            newY >= 0 &&
+            newY < ROWS &&
+            newX >= 0 &&
+            newX < COLS
+          ) {
             display[newY][newX] = current.tetromino.color;
           }
         }
       });
     });
+
     return display.map((row, yIdx) => (
-      <div key={yIdx} style={{ display: "flex" }}>
+      <div key={yIdx} className="tetris-row">
         {row.map((cell, xIdx) => (
           <div
             key={xIdx}
+            className="tetris-cell"
             style={{
-              width: 25,
-              height: 25,
-              backgroundColor: cell || "#222",
-              border: "1px solid #444",
-              boxSizing: "border-box",
+              backgroundColor: cell || "#111",
+              borderColor: cell ? "#0ff" : "#333",
+              boxShadow: cell
+                ? "0 0 10px #0ff, inset 0 0 5px #0ff"
+                : "none",
             }}
           />
         ))}
@@ -309,129 +248,32 @@ export default function TetrisBoard() {
     ));
   };
 
-  const btnStyle = {
-    backgroundColor: "#333",
-    border: "2px solid #0ff",
-    borderRadius: 6,
-    padding: "8px 12px",
-    color: "white",
-    fontWeight: "bold",
-    fontFamily: "monospace",
-    cursor: "pointer",
-    minWidth: 60,
+  const restartGame = () => {
+    setGrid(emptyGrid());
+    setScore(0);
+    setGameOver(false);
+    setCurrent({
+      tetromino: randomTetromino(),
+      rotation: 0,
+      position: { x: 3, y: 0 },
+    });
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: "#000",
-        minHeight: "100vh",
-        padding: 20,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "monospace",
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: "#111",
-          border: "4px solid #0ff",
-          borderRadius: 20,
-          padding: 20,
-          boxShadow: "0 0 30px #0ff",
-          display: "inline-block",
-        }}
-      >
-        <h2
-          style={{ color: "white", marginBottom: 5, textAlign: "center" }}
-        >
-          {gameOver ? "GAME OVER" : `Score: ${score}`}
-        </h2>
-        <h3
-          style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}
-        >
-          High Score: {highScore}
-        </h3>
-        <div
-          style={{
-            width: COLS * 25,
-            backgroundColor: "#000",
-            padding: 10,
-            borderRadius: 10,
-            border: "2px solid #0ff",
-          }}
-        >
-          {renderGrid()}
-        </div>
-
-        {!gameOver && (
-          <div
-            style={{
-              marginTop: 30,
-              display: "grid",
-              gridTemplateAreas: `
-                ".    up    ."
-                "left rot right"
-                ".   down  ."
-              `,
-              gridTemplateColumns: "repeat(3,60px)",
-              gridTemplateRows: "repeat(3,60px)",
-              gap: 10,
-              justifyContent: "center",
-              alignContent: "center",
-              width: "100%",
-              userSelect: "none",
-            }}
-          >
-            <button
-              style={{ ...btnStyle, gridArea: "up" }}
-              onClick={() => handleControl("down")}
-            >
-              ▲
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "left" }}
-              onClick={() => handleControl("left")}
-            >
-              ◄
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "rot" }}
-              onClick={() => handleControl("rotate")}
-            >
-              ⟳
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "right" }}
-              onClick={() => handleControl("right")}
-            >
-              ►
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "down" }}
-              onClick={() => handleControl("down")}
-            >
-              ▼
-            </button>
-          </div>
-        )}
-
-        {gameOver && (
-          <button
-            style={{ ...btnStyle, marginTop: 20 }}
-            onClick={() => {
-              setGrid(emptyGrid());
-              setScore(0);
-              setGameOver(false);
-              setCurrent({
-                tetromino: randomTetromino(),
-                rotation: 0,
-                position: { x: 3, y: 0 },
-              });
-            }}
-          >
+    <div className="tetris-container">
+      <h2>{gameOver ? "GAME OVER" : `Score: ${score}`}</h2>
+      <h3>High Score: {highScore}</h3>
+      <div className="tetris-grid">{renderGrid()}</div>
+      <div className="tetris-controls">
+        {!gameOver ? (
+          <>
+            <button onClick={() => handleControl("rotate")}>⟳</button>
+            <button onClick={() => handleControl("left")}>◄</button>
+            <button onClick={() => handleControl("down")}>▼</button>
+            <button onClick={() => handleControl("right")}>►</button>
+          </>
+        ) : (
+          <button className="tetris-btn" onClick={restartGame}>
             Restart
           </button>
         )}
