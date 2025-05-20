@@ -32,7 +32,9 @@ export const findExplosions = (board) => {
       if (board[y][x] && !visited[y][x]) {
         let group = [];
         dfs(x, y, board[y][x], group);
-        if (group.length >= 3) {
+
+        // Cegah meledakkan blok yang belum terlihat (di luar layar)
+        if (group.length >= 3 && group.some(cell => cell.y >= 0)) {
           explosions = explosions.concat(group);
         }
       }
