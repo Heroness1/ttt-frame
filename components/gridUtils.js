@@ -12,16 +12,14 @@ export const checkCollision = (grid, tetromino, rotation, position) => {
   for (let row = 0; row < shape.length; row++) {
     for (let col = 0; col < shape[row].length; col++) {
       if (shape[row][col]) {
-        const newX = x + col;
         const newY = y + row;
-        if (
-          newX < 0 ||
-          newX >= COLS ||
-          newY >= ROWS ||
-          (newY >= 0 && grid[newY][newX])
-        ) {
-          return true;
-        }
+        const newX = x + col;
+        // Cek batas bawah grid
+        if (newY >= ROWS) return true; 
+        // Cek batas kiri/kanan
+        if (newX < 0 || newX >= COLS) return true;
+        // Cek tabrakan dengan blok lain
+        if (newY >= 0 && grid[newY][newX]) return true;
       }
     }
   }
