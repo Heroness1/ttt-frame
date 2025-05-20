@@ -1,61 +1,92 @@
 import { ROWS, COLS } from "./gridUtils";
 
-export const findExplosions = (board) => {
-  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
-  const directions = [
-    [0, 1], [1, 0], [-1, 0], [0, -1],
-  ];
-  let explosions = [];
+// Fungsi untuk mencari grup blok warna sama yang terhubung (DFS)
+const findConnected = (grid, x, y, color, visited) => {
+  const stack = [[x, y]];
+  const connected = [];
 
-  const dfs = (x, y, color, group) => {
+  while (stack.length) {
+    const [cx, cy] = stack.pop();
     if (
-      x < 0 || x >= COLS ||
-      y < 0 || y >= ROWS ||
-      visited[y][x] ||
-      board[y][x] !== color
-    ) return;
-
-    visited[y][x] = true;
-    group.push({ x, y });
-
-    for (const [dx, dy] of directions) {
-      dfs(x + dx, y + dy, color, group);
+      cx < 0 || cx >= COLS ||
+      cy < 0 || cy >= ROWS ||
+      visited[cy][cx] ||
+      !grid[cy][cx] ||
+      (grid[cy][cx].color || grid[cy][cx]) !== color
+    ) {
+      continue;
     }
-  };
+
+    visited[cy][cx] = true;
+    connected.push([cx, cy]);
+
+    stack.push([cx + 1, cy]);
+    stack.push([cx - 1, cy]);
+    stack.push([cx, cy + 1]);
+    stack.push([cx, cy - 1]);
+  }
+
+  return connected;
+};
+
+// Fungsi utama untuk meledakkan blok yang cocok
+export const explodeMatches = (grid, setScore, combo = 1) => {
+  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+  let exploded = false;
+  let newGrid = grid.map((row) =>
+    row.map((cell) => (cell && typeof cell === "object" ? { ...cell, exploded: false } : cell))
+  );
 
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
-      if (board[y][x] && !visited[y][x]) {
-        let group = [];
-        dfs(x, y, board[y][x], group);
-
-        if (group.length >= 3 && group.some(({ y }) => y >= 0)) {
-          explosions.push(...group);
+      if (newGrid[y][x] && !visited[y][x]) {
+        const color = newGrid[y][x].color || newGrid[y][x];
+        const group = findConnected(newGrid, x, y, color, visited);
+        if (group.length >= 3) {
+          group.forEach(([gx, gy]) => {
+            newGrid[gy][gx] = { color, exploded: true };
+          });
+          exploded = true;
+          setScore((prev) => prev + group.length * 50 * combo);
         }
       }
     }
   }
-  return explosions;
+
+  return { newGrid, exploded };
 };
 
-export const applyExplosions = (board, explodedCells) => {
-  const newGrid = board.map(row => [...row]);
-  
-  // Hapus blok yang meledak
-  explodedCells.forEach(({ x, y }) => {
-    newGrid[y][x] = null;
-  });
+// Hapus blok yang meledak dan jatuhkan yang di atasnya
+export const applyExplosion = (grid) => {
+  const newGrid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 
-  // Gravity - blok jatuh turun
   for (let x = 0; x < COLS; x++) {
-    let stack = [];
+    let writeRow = ROWS - 1;
     for (let y = ROWS - 1; y >= 0; y--) {
-      if (newGrid[y][x]) stack.push(newGrid[y][x]);
-    }
-    for (let y = ROWS - 1; y >= 0; y--) {
-      newGrid[y][x] = stack.length ? stack.pop() : null;
+      const cell = grid[y][x];
+      if (cell && !(cell.exploded)) {
+        newGrid[writeRow][x] = cell;
+        writeRow--;
+      }
     }
   }
 
   return newGrid;
+};
+
+// Jalankan ledakan berantai hingga tak ada lagi
+export const runExplosions = (grid, setScore) => {
+  let currentGrid = grid;
+  let chain = 1;
+  let hasExploded = false;
+
+  while (true) {
+    const { newGrid, exploded } = explodeMatches(currentGrid, setScore, chain);
+    if (!exploded) break;
+    currentGrid = applyExplosion(newGrid);
+    chain++;
+    hasExploded = true;
+  }
+
+  return currentGrid;
 };
