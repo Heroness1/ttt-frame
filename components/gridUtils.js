@@ -1,7 +1,8 @@
 export const ROWS = 14;
 export const COLS = 10;
 
-export const emptyGrid = () => Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+export const emptyGrid = () =>
+  Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 
 export const copyGrid = (grid) => grid.map((row) => [...row]);
 
@@ -18,50 +19,59 @@ export const checkCollision = (grid, tetromino, rotation, position) => {
           newX >= COLS ||
           newY >= ROWS ||
           (newY >= 0 && grid[newY][newX])
-        )
+        ) {
           return true;
+        }
       }
     }
   }
   return false;
 };
 
-export const placeTetromino = (board, tetromino, rotation, position) => {
-  const newGrid = copyGrid(board);
+export const placeTetromino = (grid, tetromino, rotation, position) => {
+  const newGrid = copyGrid(grid);
   const shape = tetromino.shape[rotation];
   const { x, y } = position;
+
   shape.forEach((row, dy) => {
     row.forEach((cell, dx) => {
       if (cell) {
         const newY = y + dy;
         const newX = x + dx;
-        if (newY >= 0) newGrid[newY][newX] = tetromino.color;
+        if (
+          newY >= 0 &&
+          newY < ROWS &&
+          newX >= 0 &&
+          newX < COLS
+        ) {
+          newGrid[newY][newX] = tetromino.color;
+        }
       }
     });
   });
+
   return newGrid;
 };
 
-export const clearRows = (board, setScore, highScore, setHighScore) => {
+export const clearRows = (grid, setScore, highScore, setHighScore) => {
   let cleared = 0;
-  const newBoard = board.filter((row) => {
-    if (row.every((cell) => cell !== null)) {
-      cleared++;
-      return false;
-    }
-    return true;
+  const newGrid = grid.filter((row) => {
+    const full = row.every((cell) => cell !== null);
+    if (full) cleared++;
+    return !full;
   });
-  while (newBoard.length < ROWS) {
-    newBoard.unshift(Array(COLS).fill(null));
+
+  while (newGrid.length < ROWS) {
+    newGrid.unshift(Array(COLS).fill(null));
   }
+
   if (cleared > 0) {
     setScore((prev) => {
       const newScore = prev + cleared * 100;
-      if (newScore > highScore) {
-        setHighScore(newScore);
-      }
+      if (newScore > highScore) setHighScore(newScore);
       return newScore;
     });
   }
-  return newBoard;
+
+  return newGrid;
 };
