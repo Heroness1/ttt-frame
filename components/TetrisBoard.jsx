@@ -190,18 +190,16 @@ export default function TetrisBoard() {
     }
     setGrid(finalGrid);
 
-    const next = randomTetromino();
-    const startPos = { x: 3, y: 0 };
+    
+const next = randomTetromino();
+const startPos = { x: Math.floor(COLS / 2) - 2, y: 0 }; 
 
-    if (checkCollision(finalGrid, next, 0, startPos)) {
-      setGameOver(true);
-      clearInterval(intervalRef.current);
-    } else {
-      setCurrent({ tetromino: next, rotation: 0, position: startPos });
-    }
-  }
-};
-
+if (checkCollision(newGrid, next, 0, startPos)) {
+  setGameOver(true);
+  clearInterval(intervalRef.current);
+} else {
+  setCurrent({ tetromino: next, rotation: 0, position: startPos });
+}
 
   // Game loop
   useEffect(() => {
