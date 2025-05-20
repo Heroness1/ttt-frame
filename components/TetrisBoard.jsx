@@ -4,7 +4,7 @@ import {
   placeTetromino,
   clearRows,
 } from "./gridUtils";
-import { runExplosions } from "./utils/explosionUtils";
+import { runExplosions } from "./explosionUtils";
 import "./explode.css";
 
 const ROWS = 14;
