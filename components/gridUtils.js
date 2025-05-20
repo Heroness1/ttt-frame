@@ -53,7 +53,10 @@ export const placeTetromino = (grid, tetromino, rotation, position) => {
   return newGrid;
 };
 
-export const clearRows = (grid, setScore, highScore, setHighScore) => {
+/**
+ * Clear full rows, return { newGrid, clearedCount }
+ */
+export const clearRows = (grid) => {
   let cleared = 0;
   const newGrid = grid.filter((row) => {
     const full = row.every((cell) => cell !== null);
@@ -65,13 +68,5 @@ export const clearRows = (grid, setScore, highScore, setHighScore) => {
     newGrid.unshift(Array(COLS).fill(null));
   }
 
-  if (cleared > 0) {
-    setScore((prev) => {
-      const newScore = prev + cleared * 100;
-      if (newScore > highScore) setHighScore(newScore);
-      return newScore;
-    });
-  }
-
-  return newGrid;
+  return { newGrid, cleared };
 };
