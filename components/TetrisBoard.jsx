@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  emptyGrid,
   checkCollision,
   placeTetromino,
   clearRows,
