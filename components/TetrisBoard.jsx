@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const ROWS = 20;
+const ROWS = 14;
 const COLS = 10;
 const INTERVAL = 700;
 
