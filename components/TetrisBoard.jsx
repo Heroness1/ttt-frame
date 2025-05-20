@@ -5,7 +5,7 @@ import {
   clearRows,
 } from "./gridUtils";
 import { runExplosions } from "./utils/explosionUtils";
-import "./explod.css";
+import "./explode.css";
 
 const ROWS = 14;
 const COLS = 10;
