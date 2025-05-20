@@ -1,4 +1,4 @@
-export const ROWS = 20;
+export const ROWS = 14;
 export const COLS = 10;
 
 export const emptyGrid = () =>
@@ -32,22 +32,28 @@ export const placeTetromino = (grid, tetromino, rotation, position) => {
   const newGrid = copyGrid(grid);
   const shape = tetromino.shape[rotation];
   const { x, y } = position;
-
   shape.forEach((row, dy) => {
     row.forEach((cell, dx) => {
       if (cell) {
         const newY = y + dy;
         const newX = x + dx;
-        if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
+        if (
+          newY >= 0 &&
+          newY < ROWS &&
+          newX >= 0 &&
+          newX < COLS
+        ) {
           newGrid[newY][newX] = tetromino.color;
         }
       }
     });
   });
-
   return newGrid;
 };
 
+/**
+ * Clear full rows, return { newGrid, cleared }
+ */
 export const clearRows = (grid) => {
   let cleared = 0;
   const newGrid = grid.filter((row) => {
@@ -55,10 +61,8 @@ export const clearRows = (grid) => {
     if (full) cleared++;
     return !full;
   });
-
   while (newGrid.length < ROWS) {
     newGrid.unshift(Array(COLS).fill(null));
   }
-
   return { newGrid, cleared };
 };
