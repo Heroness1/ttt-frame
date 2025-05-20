@@ -14,7 +14,7 @@ export default function TetrisBoard() {
   const [current, setCurrent] = useState({
     tetromino: randomTetromino(),
     rotation: 0,
-    position: { x: 3, y: -1 },
+    position: { x: 3, y: 0 },
   });
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
@@ -34,96 +34,78 @@ export default function TetrisBoard() {
     }
   }, [highScore]);
 
-  const tick = () => {
-  if (gameOver) return;
-
-  const { x, y } = current.position;
-  if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
-    setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
-  } else {
+  const commitCurrentBlock = () => {
     let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
-
     const explosions = findExplosions(newGrid);
+
     if (explosions.length > 0) {
       setExplodingCells(explosions.map(({ x, y }) => ({ x, y, color: newGrid[y][x] })));
-
-      setCombo((prev) => prev + 1);
-
-      setScore((prev) => {
-        const comboBonus = combo > 0 ? combo * 50 : 0;
-        return prev + explosions.length * 20 + comboBonus;
-      });
-
+      const newCombo = combo + 1;
+      const comboBonus = newCombo * 50;
+      setScore((prev) => prev + explosions.length * 20 + comboBonus);
+      setCombo(newCombo);
       newGrid = applyExplosions(newGrid, explosions);
       newGrid = clearRows(newGrid, setScore, highScore, setHighScore);
-
       setGrid(newGrid);
-
-      setTimeout(() => {
-        setExplodingCells([]);
-      }, 400);
-
-      const newTetromino = randomTetromino();
-      const startPos = { x: 3, y: -1 };
-
-      if (checkCollision(newGrid, newTetromino, 0, startPos)) {
-        setGameOver(true);
-        clearInterval(intervalRef.current);
-      } else {
-        setCurrent({
-          tetromino: newTetromino,
-          rotation: 0,
-          position: startPos,
-        });
-      }
+      setTimeout(() => setExplodingCells([]), 400);
     } else {
       newGrid = clearRows(newGrid, setScore, highScore, setHighScore);
       setGrid(newGrid);
       setCombo(0);
-
-      const newTetromino = randomTetromino();
-      const startPos = { x: 3, y: -1 };
-
-      if (checkCollision(newGrid, newTetromino, 0, startPos)) {
-        setGameOver(true);
-        clearInterval(intervalRef.current);
-      } else {
-        setCurrent({
-          tetromino: newTetromino,
-          rotation: 0,
-          position: startPos,
-        });
-      }
     }
-  }
-};
+
+    const newTetromino = randomTetromino();
+    const startPos = { x: 3, y: 0 };
+
+    if (checkCollision(newGrid, newTetromino, 0, startPos)) {
+      setGameOver(true);
+      clearInterval(intervalRef.current);
+    } else {
+      setCurrent({
+        tetromino: newTetromino,
+        rotation: 0,
+        position: startPos,
+      });
+    }
+  };
+
+  const tick = () => {
+    if (gameOver) return;
+
+    const { x, y } = current.position;
+    if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
+      setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
+    } else {
+      commitCurrentBlock();
+    }
+  };
 
   useEffect(() => {
-    intervalRef.current = setInterval(tick, INTERVAL);
+    intervalRef.current = setInterval(() => tick(), INTERVAL);
     return () => clearInterval(intervalRef.current);
-  }, [grid, current, gameOver, combo]);
+  }, [gameOver]);
 
-  // Movement handlers (move, rotate, drop)
   const rotate = () => {
     const newRotation = (current.rotation + 1) % current.tetromino.shape.length;
-    if (!checkCollision(grid, current.tetromino, newRotation, current.position.x, current.position.y)) {
+    if (!checkCollision(grid, current.tetromino, newRotation, current.position)) {
       setCurrent((c) => ({ ...c, rotation: newRotation }));
     }
   };
 
   const move = (dir) => {
     const newX = current.position.x + dir;
-    if (!checkCollision(grid, current.tetromino, current.rotation, newX, current.position.y)) {
+    if (!checkCollision(grid, current.tetromino, current.rotation, { x: newX, y: current.position.y })) {
       setCurrent((c) => ({ ...c, position: { x: newX, y: c.position.y } }));
     }
   };
 
   const drop = () => {
     let newY = current.position.y;
-    while (!checkCollision(grid, current.tetromino, current.rotation, current.position.x, newY + 1)) {
+    while (!checkCollision(grid, current.tetromino, current.rotation, { x: current.position.x, y: newY + 1 })) {
       newY++;
     }
     setCurrent((c) => ({ ...c, position: { x: c.position.x, y: newY } }));
+    commitCurrentBlock();
   };
 
   const handleControl = (action) => {
@@ -263,7 +245,7 @@ export default function TetrisBoard() {
         <button style={{ ...btnStyle, gridArea: "right" }} onClick={() => handleControl("right")}>
           ►
         </button>
-        <button style={{ ...btnStyle, gridArea: "down" }} onClick={() => handleControl("down")}>
+        <button style={{ ...btnStyle, gridArea: "down" }} onClick={() => handleControl("drop")}>
           ▼
         </button>
       </div>
@@ -278,7 +260,7 @@ export default function TetrisBoard() {
             setCurrent({
               tetromino: randomTetromino(),
               rotation: 0,
-              position: { x: 3, y: -1 },
+              position: { x: 3, y: 0 },
             });
             intervalRef.current = setInterval(tick, INTERVAL);
           }}
