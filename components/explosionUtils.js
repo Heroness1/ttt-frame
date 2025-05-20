@@ -1,6 +1,5 @@
 import { ROWS, COLS } from "./gridUtils";
 
-// DFS to find connected same-color blocks
 const findConnected = (grid, x, y, color, visited) => {
   const stack = [[x, y]];
   const connected = [];
@@ -30,10 +29,6 @@ const findConnected = (grid, x, y, color, visited) => {
   return connected;
 };
 
-/**
- * Mark groups of 3+ connected same-color blocks as exploded.
- * Returns { newGrid, exploded, scoreGained }
- */
 export const explodeMatches = (grid, combo = 1) => {
   const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
   let exploded = false;
@@ -64,10 +59,6 @@ export const explodeMatches = (grid, combo = 1) => {
   return { newGrid, exploded, scoreGained };
 };
 
-/**
- * Remove exploded blocks and drop remaining blocks down.
- * Returns new grid.
- */
 export const applyExplosion = (grid) => {
   const newGrid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 
@@ -75,7 +66,7 @@ export const applyExplosion = (grid) => {
     let writeRow = ROWS - 1;
     for (let y = ROWS - 1; y >= 0; y--) {
       const cell = grid[y][x];
-      if (cell && !(cell.exploded)) {
+      if (cell && !cell.exploded) {
         newGrid[writeRow][x] = cell;
         writeRow--;
       }
@@ -85,10 +76,6 @@ export const applyExplosion = (grid) => {
   return newGrid;
 };
 
-/**
- * Runs chained explosions until no more explosions.
- * Returns { finalGrid, totalScore }
- */
 export const runExplosions = (grid) => {
   let currentGrid = grid;
   let combo = 1;
