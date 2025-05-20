@@ -1,15 +1,86 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  ROWS,
-  COLS,
-  emptyGrid,
-  checkCollision,
-  placeTetromino,
-  clearRows,
-} from "./gridUtils.js";
-import { runExplosions } from "./explosionUtils.js";
-import "./explode.css";
 
+// Grid Constants
+const ROWS = 20;
+const COLS = 10;
+
+// Empty grid helper
+export const emptyGrid = () =>
+  Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+
+// Check collision: apakah tetromino nabrak blok di grid pada posisi dan rotasi tertentu
+export function checkCollision(grid, tetromino, rotation, pos) {
+  const shape = tetromino.shape[rotation];
+  for (let y = 0; y < shape.length; y++) {
+    for (let x = 0; x < shape[y].length; x++) {
+      if (shape[y][x]) {
+        const newY = pos.y + y;
+        const newX = pos.x + x;
+        // cek out of bounds
+        if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
+        // cek bentrok dengan blok sudah ada
+        if (newY >= 0 && grid[newY][newX]) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Tempatkan tetromino di grid (immutable)
+export function placeTetromino(grid, tetromino, rotation, pos) {
+  const shape = tetromino.shape[rotation];
+  const newGrid = grid.map((row) => row.slice());
+  shape.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      if (cell) {
+        const newY = pos.y + y;
+        const newX = pos.x + x;
+        if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
+          newGrid[newY][newX] = tetromino.color;
+        }
+      }
+    });
+  });
+  return newGrid;
+}
+
+// Clear full rows, update score, return new grid
+export function clearRows(grid, setScore, scoreRef) {
+  let cleared = 0;
+  let newGrid = [];
+
+  for (let y = 0; y < ROWS; y++) {
+    if (grid[y].every((cell) => cell !== null)) {
+      cleared++;
+    } else {
+      newGrid.push(grid[y]);
+    }
+  }
+
+  // Tambah baris kosong di atas sesuai jumlah cleared rows
+  while (newGrid.length < ROWS) {
+    newGrid.unshift(Array(COLS).fill(null));
+  }
+
+  if (cleared > 0) {
+    // Score sesuai banyak baris cleared
+    const points = cleared * 100;
+    setScore((prev) => {
+      scoreRef.current = prev + points;
+      return prev + points;
+    });
+  }
+
+  return newGrid;
+}
+
+// Explosion logic (placeholder)
+export function runExplosions(grid, setScore) {
+  // Bisa tambahin animasi ledakan di sini kalau mau
+  return grid;
+}
+
+// Tetromino shapes dan warna
 const TETROMINOS = {
   I: {
     shape: [
@@ -150,43 +221,48 @@ export default function TetrisBoard() {
     position: { x: 3, y: 0 },
   });
   const [score, setScore] = useState(0);
+  const scoreRef = useRef(score);
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const intervalRef = useRef(null);
 
-  // Load high score from localStorage
+  // Load high score dari localStorage
   useEffect(() => {
     const saved = localStorage.getItem("tetris-high-score");
     if (saved) setHighScore(parseInt(saved, 10));
   }, []);
 
-  // Save high score when it changes
+  // Save high score kalau score lebih tinggi
   useEffect(() => {
-    if (highScore > 0) {
-      localStorage.setItem("tetris-high-score", highScore.toString());
+    if (score > highScore) {
+      setHighScore(score);
+      localStorage.setItem("tetris-high-score", score.toString());
     }
-  }, [highScore]);
+  }, [score, highScore]);
 
   const tick = () => {
     if (gameOver) return;
-
     const { x, y } = current.position;
+
     if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
       setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
     } else {
-      // Place tetromino on grid
+      // Tempatkan tetromino ke grid
       let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
-      // Clear full rows and update score
-      newGrid = clearRows(newGrid, setScore, highScore, setHighScore);
-      // Run explosion effect if you have
+
+      // Clear rows dan update score
+      newGrid = clearRows(newGrid, setScore, scoreRef);
+
+      // Jalankan explosion (placeholder)
       newGrid = runExplosions(newGrid, setScore);
+
       setGrid(newGrid);
 
-      // Spawn new tetromino
+      // Spawn tetromino baru
       const next = randomTetromino();
       const startPos = { x: 3, y: 0 };
 
-      // Check collision at start pos: if true, game over
+      // Cek game over
       if (checkCollision(newGrid, next, 0, startPos)) {
         setGameOver(true);
         clearInterval(intervalRef.current);
@@ -196,14 +272,13 @@ export default function TetrisBoard() {
     }
   };
 
-  // Game loop interval
   useEffect(() => {
     if (gameOver) return;
     intervalRef.current = setInterval(tick, 700);
     return () => clearInterval(intervalRef.current);
   }, [current, gameOver, grid]);
 
-  // Controls handler
+  // Kontrol input
   const handleControl = (direction) => {
     if (gameOver) return;
 
@@ -237,14 +312,21 @@ export default function TetrisBoard() {
     }
   };
 
-  // Render the grid with current falling tetromino overlay
+  // Restart game
+  const restart = () => {
+    setGrid(emptyGrid());
+    setScore(0);
+    scoreRef.current = 0;
+    setGameOver(false);
+    setCurrent({ tetromino: randomTetromino(), rotation: 0, position: { x: 3, y: 0 } });
+  };
+
+  // Render grid + current tetromino overlay
   const renderGrid = () => {
-    // Copy grid to display
     const display = grid.map((row) => [...row]);
     const shape = current.tetromino.shape[current.rotation];
     const { x, y } = current.position;
 
-    // Overlay current tetromino cells onto display grid
     shape.forEach((row, dy) => {
       row.forEach((cell, dx) => {
         if (cell) {
@@ -328,78 +410,54 @@ export default function TetrisBoard() {
           {renderGrid()}
         </div>
 
-        {!gameOver && (
-          <div
-            style={{
-              marginTop: 30,
-              display: "grid",
-              gridTemplateAreas: `
-                ".    up    ."
-                "left rot right"
-                ".   down  ."
-              `,
-              gridTemplateColumns: "repeat(3,60px)",
-              gridTemplateRows: "repeat(3,60px)",
-              gap: 10,
-              justifyContent: "center",
-              alignContent: "center",
-              width: "100%",
-              userSelect: "none",
-            }}
+        <div
+          style={{
+            marginTop: 30,
+            display: "grid",
+            gridTemplateAreas: `
+              ".    up    ."
+              "left rot right"
+              ".   down  ."
+            `,
+            gridTemplateColumns: "repeat(3, 60px)",
+            gridTemplateRows: "repeat(3, 50px)",
+            justifyContent: "center",
+            gap: 10,
+            userSelect: "none",
+          }}
+        >
+          <button
+            style={{ ...btnStyle, gridArea: "up" }}
+            onClick={() => handleControl("rotate")}
           >
-            <button
-              style={{ ...btnStyle, gridArea: "up" }}
-              onClick={() => handleControl("down")}
-              aria-label="Move Down"
-            >
-              ▼
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "left" }}
-              onClick={() => handleControl("left")}
-              aria-label="Move Left"
-            >
-              ◄
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "rot" }}
-              onClick={() => handleControl("rotate")}
-              aria-label="Rotate"
-            >
-              ⟳
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "right" }}
-              onClick={() => handleControl("right")}
-              aria-label="Move Right"
-            >
-              ►
-            </button>
-            <button
-              style={{ ...btnStyle, gridArea: "down" }}
-              onClick={() => handleControl("down")}
-              aria-label="Move Down"
-            >
-              ▼
-            </button>
-          </div>
-        )}
+            ROTATE
+          </button>
+          <button
+            style={{ ...btnStyle, gridArea: "left" }}
+            onClick={() => handleControl("left")}
+          >
+            LEFT
+          </button>
+          <button
+            style={{ ...btnStyle, gridArea: "right" }}
+            onClick={() => handleControl("right")}
+          >
+            RIGHT
+          </button>
+          <button
+            style={{ ...btnStyle, gridArea: "down" }}
+            onClick={() => handleControl("down")}
+          >
+            DOWN
+          </button>
+        </div>
 
         {gameOver && (
           <button
-            style={{ ...btnStyle, marginTop: 20 }}
-            onClick={() => {
-              setGrid(emptyGrid());
-              setScore(0);
-              setGameOver(false);
-              setCurrent({
-                tetromino: randomTetromino(),
-                rotation: 0,
-                position: { x: 3, y: 0 },
-              });
-            }}
+            style={{ ...btnStyle, marginTop: 20, width: "100%" }}
+            onClick={restart}
           >
-            Restart
+            RESTART
           </button>
         )}
       </div>
