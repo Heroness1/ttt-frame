@@ -1,4 +1,4 @@
-export const ROWS = 14;
+export const ROWS = 20;
 export const COLS = 10;
 
 export const emptyGrid = () =>
@@ -38,12 +38,7 @@ export const placeTetromino = (grid, tetromino, rotation, position) => {
       if (cell) {
         const newY = y + dy;
         const newX = x + dx;
-        if (
-          newY >= 0 &&
-          newY < ROWS &&
-          newX >= 0 &&
-          newX < COLS
-        ) {
+        if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
           newGrid[newY][newX] = tetromino.color;
         }
       }
@@ -53,9 +48,6 @@ export const placeTetromino = (grid, tetromino, rotation, position) => {
   return newGrid;
 };
 
-/**
- * Clear full rows, return { newGrid, clearedCount }
- */
 export const clearRows = (grid) => {
   let cleared = 0;
   const newGrid = grid.filter((row) => {
