@@ -1,6 +1,6 @@
 import { ROWS, COLS } from "./gridUtils";
 
-// DFS untuk cari blok warna sama yang terhubung
+// DFS untuk mencari blok warna sama yang terhubung
 const findConnected = (grid, x, y, color, visited) => {
   const stack = [[x, y]];
   const connected = [];
@@ -30,6 +30,7 @@ export const explodeMatches = (grid, combo = 1) => {
   const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
   let exploded = false;
   let scoreGained = 0;
+  // Reset semua exploded ke false
   const newGrid = grid.map(row =>
     row.map(cell => (cell && typeof cell === "object" ? { ...cell, exploded: false } : cell))
   );
