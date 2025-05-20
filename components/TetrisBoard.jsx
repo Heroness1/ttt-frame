@@ -258,48 +258,51 @@ export default function TetrisBoard() {
     setCurrent({ tetromino: randomTetromino(), rotation: 0, position: { x: 3, y: 0 } });
   };
 
-  // Render grid + current tetromino overlay
-  const renderGrid = () => {
-    // Copy grid, overlay current tetromino
-    const display = grid.map((row) => row.map(cell => cell && cell.color ? cell : cell));
-    const shape = current.tetromino.shape[current.rotation];
-    const { x, y } = current.position;
-
-    shape.forEach((row, dy) => {
-      row.forEach((cell, dx) => {
-        if (cell) {
-          const newY = y + dy;
-          const newX = x + dx;
-          if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
-            display[newY][newX] = current.tetromino.color;
-          }
+  // ... grid
+const renderGrid = () => {
+  const display = grid.map((row) => row.map(cell => cell && cell.color ? cell : cell));
+  const shape = current.tetromino.shape[current.rotation];
+  const { x, y } = current.position;
+  shape.forEach((row, dy) => {
+    row.forEach((cell, dx) => {
+      if (cell) {
+        const newY = y + dy;
+        const newX = x + dx;
+        if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
+          display[newY][newX] = current.tetromino.color;
         }
-      });
+      }
     });
-
-    return display.map((row, yIdx) => (
-      <div key={yIdx} style={{ display: "flex" }}>
-        {row.map((cell, xIdx) => {
-          let color = typeof cell === "object" ? cell.color : cell;
-          let exploded = typeof cell === "object" && cell.exploded;
-          return (
-            <div
-              key={xIdx}
-              className={exploded ? "explode" : ""}
-              style={{
-                width: 25,
-                height: 25,
-                backgroundColor: color || "#222",
-                border: "1px solid #444",
-                boxSizing: "border-box",
-                transition: "background 0.2s",
-              }}
-            />
-          );
-        })}
-      </div>
-    ));
-  };
+  });
+  return display.map((row, yIdx) => (
+    <div key={yIdx} style={{ display: "flex" }}>
+      {row.map((cell, xIdx) => {
+        let color = null;
+        let exploded = false;
+        if (cell && typeof cell === "object") {
+          color = cell.color;
+          exploded = cell.exploded;
+        } else if (typeof cell === "string") {
+          color = cell;
+        }
+        return (
+          <div
+            key={xIdx}
+            className={exploded ? "explode" : ""}
+            style={{
+              width: 25,
+              height: 25,
+              backgroundColor: color || "#222",
+              border: "1px solid #444",
+              boxSizing: "border-box",
+              transition: "background 0.2s",
+            }}
+          />
+        );
+      })}
+    </div>
+  ));
+};
 
   const btnStyle = {
     backgroundColor: "#333",
