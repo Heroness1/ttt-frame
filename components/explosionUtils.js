@@ -53,7 +53,7 @@ export const applyExplosions = (board, explodedCells) => {
       if (newGrid[y][x]) stack.push(newGrid[y][x]);
     }
     for (let y = ROWS - 1; y >= 0; y--) {
-      newGrid[y][x] = stack.length > 0 ? stack.shift() : null;
+      newGrid[y][x] = stack.length > 0 ? stack.pop() : null;
     }
   }
   return newGrid;
