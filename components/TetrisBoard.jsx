@@ -3,8 +3,8 @@ import {
   checkCollision,
   placeTetromino,
   clearRows,
-} from "./gridUtils";
-import { runExplosions } from "./explosionUtils";
+} from "./gridUtils.js";
+import { runExplosions } from "./explosionUtils.js";
 import "./explode.css";
 
 const ROWS = 14;
