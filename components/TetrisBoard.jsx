@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { TETROMINOS, randomTetromino } from "../tetrominos";
-import { ROWS, COLS, DIRECTIONS, INTERVAL } from "../constants";
+import { TETROMINOS, randomTetromino } from "./tetrominos";
+import { ROWS, COLS, DIRECTIONS, INTERVAL } from "./constants";
 
 const createEmptyBoard = () => {
   return Array.from({ length: ROWS }, () =>
