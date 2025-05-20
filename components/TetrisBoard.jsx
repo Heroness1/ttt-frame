@@ -164,48 +164,44 @@ export default function TetrisBoard() {
   }, [score, highScore]);
 
   const tick = () => {
-    if (gameOver) return;
-    const { x, y } = current.position;
+  if (gameOver) return;
+  const { x, y } = current.position;
 
-    if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
-      setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
-    } else {
-      // Tempatkan tetromino ke grid
-      let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
+  if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
+    setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
+  } else {
+    let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
 
-      // Clear rows dan update score
-      const { newGrid: clearedGrid, cleared } = clearRows(newGrid);
-      if (cleared > 0) {
-        const points = cleared * 100;
-        setScore((prev) => {
-          scoreRef.current = prev + points;
-          return prev + points;
-        });
-      }
-
-      // Jalankan explosion (match-3) dan update score
-      const { finalGrid, totalScore } = runExplosions(clearedGrid);
-      if (totalScore > 0) {
-        setScore((prev) => {
-          scoreRef.current = prev + totalScore;
-          return prev + totalScore;
-        });
-      }
-      setGrid(finalGrid);
-
-      // Spawn tetromino baru
-      const next = randomTetromino();
-      const startPos = { x: 3, y: 0 };
-
-      // Cek game over
-      if (checkCollision(finalGrid, next, 0, startPos)) {
-        setGameOver(true);
-        clearInterval(intervalRef.current);
-      } else {
-        setCurrent({ tetromino: next, rotation: 0, position: startPos });
-      }
+    const { newGrid: clearedGrid, cleared } = clearRows(newGrid);
+    if (cleared > 0) {
+      const points = cleared * 100;
+      setScore((prev) => {
+        scoreRef.current = prev + points;
+        return prev + points;
+      });
     }
-  };
+
+    const { finalGrid, totalScore } = runExplosions(clearedGrid);
+    if (totalScore > 0) {
+      setScore((prev) => {
+        scoreRef.current = prev + totalScore;
+        return prev + totalScore;
+      });
+    }
+    setGrid(finalGrid);
+
+    const next = randomTetromino();
+    const startPos = { x: 3, y: 0 };
+
+    if (checkCollision(finalGrid, next, 0, startPos)) {
+      setGameOver(true);
+      clearInterval(intervalRef.current);
+    } else {
+      setCurrent({ tetromino: next, rotation: 0, position: startPos });
+    }
+  }
+};
+
 
   // Game loop
   useEffect(() => {
