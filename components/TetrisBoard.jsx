@@ -356,7 +356,7 @@ export default function TetrisBoard() {
             width: "100%",
             userSelect: "none",
           }}>
-            <button style={{ ...btnStyle, gridArea: "up" }} onClick={() => handleControl("down")}>▲</button>
+            <button style={{ ...btnStyle, gridArea: "up" }} onClick={() => handleControl("up")}>▲</button>
             <button style={{ ...btnStyle, gridArea: "left" }} onClick={() => handleControl("left")}>◄</button>
             <button style={{ ...btnStyle, gridArea: "rot" }} onClick={() => handleControl("rotate")}>⟳</button>
             <button style={{ ...btnStyle, gridArea: "right" }} onClick={() => handleControl("right")}>►</button>
