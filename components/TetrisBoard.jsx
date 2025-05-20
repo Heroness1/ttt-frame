@@ -285,20 +285,43 @@ export default function TetrisBoard() {
   };
 
   const renderGrid = () => {
-    const display = grid.map((row) => [...row]);
-    const shape = current.tetromino.shape[current.rotation];
-    const { x, y } = current.position;
-    shape.forEach((row, dy) => {
-      row.forEach((cell, dx) => {
-        if (cell) {
-          const newY = y + dy;
-          const newX = x + dx;
-          if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
-            display[newY][newX] = current.tetromino.color;
-          }
+  const display = grid.map((row) => [...row]);
+  const shape = current.tetromino.shape[current.rotation];
+  const { x, y } = current.position;
+  shape.forEach((row, dy) => {
+    row.forEach((cell, dx) => {
+      if (cell) {
+        const newY = y + dy;
+        const newX = x + dx;
+        if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
+          display[newY][newX] = current.tetromino.color;
         }
-      });
+      }
     });
+  });
+  return display.map((row, yIdx) => (
+    <div key={yIdx} style={{ display: "flex" }}>
+      {row.map((cell, xIdx) => {
+        const color = typeof cell === "object" ? cell.color : cell;
+        const isExploding = typeof cell === "object" && cell.exploded;
+
+        return (
+          <div
+            key={xIdx}
+            style={{
+              width: 25,
+              height: 25,
+              backgroundColor: color || "#222",
+              border: "1px solid #444",
+              boxSizing: "border-box",
+              animation: isExploding ? "explodeAnim 0.3s" : undefined,
+            }}
+          />
+        );
+      })}
+    </div>
+  ));
+};  // <---- Kurung kurawal penutup dan titik koma disini
     return display.map((row, yIdx) => (
   <div key={yIdx} style={{ display: "flex" }}>
     {row.map((cell, xIdx) => {
