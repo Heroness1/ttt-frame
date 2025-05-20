@@ -536,3 +536,7 @@ export default function TetrisBoard() {
         >
           Restart
         </button>
+      )}
+    </div>  
+  );
+}
