@@ -4,7 +4,8 @@ import {
   placeTetromino,
   clearRows,
 } from "./gridUtils";
-import { findExplosions, applyExplosions } from "./explosionUtils";
+import { runExplosions } from "./utils/explosionUtils";
+import "./explod.css";
 
 const ROWS = 14;
 const COLS = 10;
@@ -198,7 +199,7 @@ export default function TetrisBoard() {
         if (cell) {
           const newY = y + dy;
           const newX = x + dx;
-          if (newY >= 0) newGrid[newY][newX] = current.tetromino.color;
+          if (newY >= 0) newGrid[newY][newX] = { color: tetromino.color, exploded: false };
         }
       });
     });
@@ -235,9 +236,10 @@ export default function TetrisBoard() {
     if (!checkCollision(x, y + 1, current.rotation)) {
       setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
     } else {
-      const newGrid = placeTetromino();
-      const cleared = clearRows(newGrid);
-      setGrid(cleared);
+      let newGrid = placeTetromino(grid, tetromino, rotation, position);
+      newGrid = clearRows(newGrid, setScore, highScore, setHighScore);
+      newGrid = runExplosions(newGrid, setScore);
+      setGrid(newGrid);
       const next = randomTetromino();
       const startPos = { x: 3, y: 0 };
       if (checkCollision(startPos.x, startPos.y, 0)) {
@@ -298,23 +300,27 @@ export default function TetrisBoard() {
       });
     });
     return display.map((row, yIdx) => (
-      <div key={yIdx} style={{ display: "flex" }}>
-        {row.map((cell, xIdx) => (
-          <div
-            key={xIdx}
-            style={{
-              width: 25,
-              height: 25,
-              backgroundColor: cell || "#222",
-              border: "1px solid #444",
-              boxSizing: "border-box",
-            }}
-          />
-        ))}
-      </div>
-    ));
-  };
+  <div key={yIdx} style={{ display: "flex" }}>
+    {row.map((cell, xIdx) => {
+      const color = typeof cell === "object" ? cell.color : cell;
+      const isExploding = typeof cell === "object" && cell.exploded;
 
+      return (
+        <div
+          key={xIdx}
+          style={{
+            width: 25,
+            height: 25,
+            backgroundColor: color || "#222",
+            border: "1px solid #444",
+            boxSizing: "border-box",
+            animation: isExploding ? "explodeAnim 0.3s" : undefined,
+          }}
+        />
+      );
+    })}
+  </div>
+));
   const btnStyle = {
     backgroundColor: "#333",
     border: "2px solid #0ff",
