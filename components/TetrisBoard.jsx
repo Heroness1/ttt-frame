@@ -35,56 +35,68 @@ export default function TetrisBoard() {
   }, [highScore]);
 
   const tick = () => {
-    if (gameOver) return;
+  if (gameOver) return;
 
-    const { x, y } = current.position;
-    if (!checkCollision(grid, current.tetromino, current.rotation, x, y + 1)) {
-      setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
-    } else {
-      let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
+  const { x, y } = current.position;
+  if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
+    setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
+  } else {
+    let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
 
-      const explosions = findExplosions(newGrid);
-      if (explosions.length > 0) {
-        setExplodingCells(explosions.map(({ x, y }) => ({ x, y, color: newGrid[y][x] })));
+    const explosions = findExplosions(newGrid);
+    if (explosions.length > 0) {
+      setExplodingCells(explosions.map(({ x, y }) => ({ x, y, color: newGrid[y][x] })));
 
-        setCombo((prev) => prev + 1);
+      setCombo((prev) => prev + 1);
 
-        setScore((prev) => {
-          const comboBonus = combo > 0 ? combo * 50 : 0;
-          return prev + explosions.length * 20 + comboBonus;
-        });
+      setScore((prev) => {
+        const comboBonus = combo > 0 ? combo * 50 : 0;
+        return prev + explosions.length * 20 + comboBonus;
+      });
 
-        newGrid = applyExplosions(newGrid, explosions);
-        newGrid = clearRows(newGrid, setScore, highScore, setHighScore);
+      newGrid = applyExplosions(newGrid, explosions);
+      newGrid = clearRows(newGrid, setScore, highScore, setHighScore);
 
-        setGrid(newGrid);
+      setGrid(newGrid);
 
-        setTimeout(() => {
-          setExplodingCells([]);
-        }, 400);
+      setTimeout(() => {
+        setExplodingCells([]);
+      }, 400);
 
-        setCurrent({
-          tetromino: randomTetromino(),
-          rotation: 0,
-          position: { x: 3, y: -1 },
-        });
-      } else {
-        newGrid = clearRows(newGrid, setScore, setHighScore);
-        setGrid(newGrid);
-        setCombo(0);
-        setCurrent({
-          tetromino: randomTetromino(),
-          rotation: 0,
-          position: { x: 3, y: -1 },
-        });
-      }
+      const newTetromino = randomTetromino();
+      const startPos = { x: 3, y: -1 };
 
-      if (checkCollision(newGrid, current.tetromino, 0, 3, 0)) {
+      if (checkCollision(newGrid, newTetromino, 0, startPos)) {
         setGameOver(true);
         clearInterval(intervalRef.current);
+      } else {
+        setCurrent({
+          tetromino: newTetromino,
+          rotation: 0,
+          position: startPos,
+        });
+      }
+    } else {
+      newGrid = clearRows(newGrid, setScore, highScore, setHighScore);
+      setGrid(newGrid);
+      setCombo(0);
+
+      const newTetromino = randomTetromino();
+      const startPos = { x: 3, y: -1 };
+
+      if (checkCollision(newGrid, newTetromino, 0, startPos)) {
+        setGameOver(true);
+        clearInterval(intervalRef.current);
+      } else {
+        setCurrent({
+          tetromino: newTetromino,
+          rotation: 0,
+          position: startPos,
+        });
       }
     }
-  };
+  }
+};
 
   useEffect(() => {
     intervalRef.current = setInterval(tick, INTERVAL);
