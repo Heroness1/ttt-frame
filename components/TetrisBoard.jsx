@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { checkCollision, placeTetromino, clearRows } from "./gridUtils.js";
+import {
+  ROWS,
+  COLS,
+  emptyGrid,
+  checkCollision,
+  placeTetromino,
+  clearRows,
+} from "./gridUtils.js";
 import { runExplosions } from "./explosionUtils.js";
 import "./explode.css";
-
-const ROWS = 14;
-const COLS = 10;
-const INTERVAL = 700;
 
 const TETROMINOS = {
   I: {
@@ -139,81 +142,52 @@ const randomTetromino = () => {
   return { ...TETROMINOS[rand], name: rand };
 };
 
-const emptyGrid = () => Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-
 export default function TetrisBoard() {
   const [grid, setGrid] = useState(emptyGrid());
   const [current, setCurrent] = useState({
     tetromino: randomTetromino(),
     rotation: 0,
-    position: { x: 2, y: -1 },
+    position: { x: 3, y: 0 },
   });
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const intervalRef = useRef(null);
 
+  // Load high score from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("tetris-high-score");
-    if (saved) setHighScore(parseInt(saved));
+    if (saved) setHighScore(parseInt(saved, 10));
   }, []);
 
+  // Save high score when it changes
   useEffect(() => {
     if (highScore > 0) {
       localStorage.setItem("tetris-high-score", highScore.toString());
     }
   }, [highScore]);
 
-  const checkCollision = (x, y, rotation) => {
-    const shape = current.tetromino.shape[rotation];
-    for (let row = 0; row < shape.length; row++) {
-      for (let col = 0; col < shape[row].length; col++) {
-        if (shape[row][col]) {
-          const newX = x + col;
-          const newY = y + row;
-          if (
-            newX < 0 ||
-            newX >= COLS ||
-            newY >= ROWS ||
-            (newY >= 0 && grid[newY][newX])
-          )
-            return true;
-        }
-      }
-    }
-    return false;
-  };
-
-  const placeTetrominoOnGrid = () => {
-    const newGrid = grid.map((row) => [...row]);
-    const shape = current.tetromino.shape[current.rotation];
-    const { x, y } = current.position;
-    shape.forEach((row, dy) => {
-      row.forEach((cell, dx) => {
-        if (cell) {
-          const newY = y + dy;
-          const newX = x + dx;
-          if (newY >= 0) newGrid[newY][newX] = { color: current.tetromino.color, exploded: false };
-        }
-      });
-    });
-    return newGrid;
-  };
-
   const tick = () => {
     if (gameOver) return;
+
     const { x, y } = current.position;
-    if (!checkCollision(x, y + 1, current.rotation)) {
+    if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
       setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
     } else {
-      let newGrid = placeTetrominoOnGrid();
+      // Place tetromino on grid
+      let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
+      // Clear full rows and update score
       newGrid = clearRows(newGrid, setScore, highScore, setHighScore);
+      // Run explosion effect if you have
       newGrid = runExplosions(newGrid, setScore);
       setGrid(newGrid);
 
+      // Spawn new tetromino
       const next = randomTetromino();
       const startPos = { x: 3, y: 0 };
-      if (checkCollision(startPos.x, startPos.y, 0)) {
+
+      // Check collision at start pos: if true, game over
+      if (checkCollision(newGrid, next, 0, startPos)) {
         setGameOver(true);
         clearInterval(intervalRef.current);
       } else {
@@ -222,40 +196,55 @@ export default function TetrisBoard() {
     }
   };
 
+  // Game loop interval
   useEffect(() => {
     if (gameOver) return;
-    intervalRef.current = setInterval(tick, INTERVAL);
+    intervalRef.current = setInterval(tick, 700);
     return () => clearInterval(intervalRef.current);
-  }, [current, gameOver]);
+  }, [current, gameOver, grid]);
 
+  // Controls handler
   const handleControl = (direction) => {
     if (gameOver) return;
+
     const { x, y } = current.position;
     let rotation = current.rotation;
+
     switch (direction) {
       case "left":
-        if (!checkCollision(x - 1, y, rotation)) setCurrent((c) => ({ ...c, position: { x: x - 1, y } }));
+        if (!checkCollision(grid, current.tetromino, rotation, { x: x - 1, y })) {
+          setCurrent((c) => ({ ...c, position: { x: x - 1, y } }));
+        }
         break;
       case "right":
-        if (!checkCollision(x + 1, y, rotation)) setCurrent((c) => ({ ...c, position: { x: x + 1, y } }));
+        if (!checkCollision(grid, current.tetromino, rotation, { x: x + 1, y })) {
+          setCurrent((c) => ({ ...c, position: { x: x + 1, y } }));
+        }
         break;
       case "down":
-        if (!checkCollision(x, y + 1, rotation)) setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
+        if (!checkCollision(grid, current.tetromino, rotation, { x, y: y + 1 })) {
+          setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
+        }
         break;
       case "rotate":
         const nextRotation = (rotation + 1) % current.tetromino.shape.length;
-        if (!checkCollision(x, y, nextRotation)) setCurrent((c) => ({ ...c, rotation: nextRotation }));
+        if (!checkCollision(grid, current.tetromino, nextRotation, { x, y })) {
+          setCurrent((c) => ({ ...c, rotation: nextRotation }));
+        }
         break;
       default:
         break;
     }
   };
 
+  // Render the grid with current falling tetromino overlay
   const renderGrid = () => {
+    // Copy grid to display
     const display = grid.map((row) => [...row]);
     const shape = current.tetromino.shape[current.rotation];
     const { x, y } = current.position;
 
+    // Overlay current tetromino cells onto display grid
     shape.forEach((row, dy) => {
       row.forEach((cell, dx) => {
         if (cell) {
@@ -270,24 +259,18 @@ export default function TetrisBoard() {
 
     return display.map((row, yIdx) => (
       <div key={yIdx} style={{ display: "flex" }}>
-        {row.map((cell, xIdx) => {
-          const color = typeof cell === "object" ? cell.color : cell;
-          const isExploding = typeof cell === "object" && cell.exploded;
-
-          return (
-            <div
-              key={xIdx}
-              style={{
-                width: 25,
-                height: 25,
-                backgroundColor: color || "#222",
-                border: "1px solid #444",
-                boxSizing: "border-box",
-                animation: isExploding ? "explodeAnim 0.3s" : undefined,
-              }}
-            />
-          );
-        })}
+        {row.map((cell, xIdx) => (
+          <div
+            key={xIdx}
+            style={{
+              width: 25,
+              height: 25,
+              backgroundColor: cell || "#222",
+              border: "1px solid #444",
+              boxSizing: "border-box",
+            }}
+          />
+        ))}
       </div>
     ));
   };
@@ -305,76 +288,117 @@ export default function TetrisBoard() {
   };
 
   return (
-    <div style={{
-      backgroundColor: "#000",
-      minHeight: "100vh",
-      padding: 20,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: "monospace",
-    }}>
-      <div style={{
-        backgroundColor: "#111",
-        border: "4px solid #0ff",
-        borderRadius: 20,
+    <div
+      style={{
+        backgroundColor: "#000",
+        minHeight: "100vh",
         padding: 20,
-        boxShadow: "0 0 30px #0ff",
-        display: "inline-block",
-      }}>
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "monospace",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#111",
+          border: "4px solid #0ff",
+          borderRadius: 20,
+          padding: 20,
+          boxShadow: "0 0 30px #0ff",
+          display: "inline-block",
+        }}
+      >
         <h2 style={{ color: "white", marginBottom: 5, textAlign: "center" }}>
           {gameOver ? "GAME OVER" : `Score: ${score}`}
         </h2>
         <h3 style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}>
           High Score: {highScore}
         </h3>
-        <div style={{
-          width: COLS * 25,
-          backgroundColor: "#000",
-          padding: 10,
-          borderRadius: 10,
-          border: "2px solid #0ff",
-        }}>
+        <div
+          style={{
+            width: COLS * 25,
+            backgroundColor: "#000",
+            padding: 10,
+            borderRadius: 10,
+            border: "2px solid #0ff",
+          }}
+        >
           {renderGrid()}
         </div>
 
         {!gameOver && (
-          <div style={{
-            marginTop: 30,
-            display: "grid",
-            gridTemplateAreas: `
-              ".    up    ."
-              "left rot right"
-              ".   down  ."
-            `,
-            gridTemplateColumns: "repeat(3,60px)",
-            gridTemplateRows: "repeat(3,60px)",
-            gap: 10,
-            justifyContent: "center",
-            alignContent: "center",
-            width: "100%",
-            userSelect: "none",
-          }}>
-            <button style={{ ...btnStyle, gridArea: "up" }} onClick={() => handleControl("up")}>▲</button>
-            <button style={{ ...btnStyle, gridArea: "left" }} onClick={() => handleControl("left")}>◄</button>
-            <button style={{ ...btnStyle, gridArea: "rot" }} onClick={() => handleControl("rotate")}>⟳</button>
-            <button style={{ ...btnStyle, gridArea: "right" }} onClick={() => handleControl("right")}>►</button>
-            <button style={{ ...btnStyle, gridArea: "down" }} onClick={() => handleControl("down")}>▼</button>
+          <div
+            style={{
+              marginTop: 30,
+              display: "grid",
+              gridTemplateAreas: `
+                ".    up    ."
+                "left rot right"
+                ".   down  ."
+              `,
+              gridTemplateColumns: "repeat(3,60px)",
+              gridTemplateRows: "repeat(3,60px)",
+              gap: 10,
+              justifyContent: "center",
+              alignContent: "center",
+              width: "100%",
+              userSelect: "none",
+            }}
+          >
+            <button
+              style={{ ...btnStyle, gridArea: "up" }}
+              onClick={() => handleControl("down")}
+              aria-label="Move Down"
+            >
+              ▼
+            </button>
+            <button
+              style={{ ...btnStyle, gridArea: "left" }}
+              onClick={() => handleControl("left")}
+              aria-label="Move Left"
+            >
+              ◄
+            </button>
+            <button
+              style={{ ...btnStyle, gridArea: "rot" }}
+              onClick={() => handleControl("rotate")}
+              aria-label="Rotate"
+            >
+              ⟳
+            </button>
+            <button
+              style={{ ...btnStyle, gridArea: "right" }}
+              onClick={() => handleControl("right")}
+              aria-label="Move Right"
+            >
+              ►
+            </button>
+            <button
+              style={{ ...btnStyle, gridArea: "down" }}
+              onClick={() => handleControl("down")}
+              aria-label="Move Down"
+            >
+              ▼
+            </button>
           </div>
         )}
 
         {gameOver && (
-          <button style={{ ...btnStyle, marginTop: 20 }} onClick={() => {
-            setGrid(emptyGrid());
-            setScore(0);
-            setGameOver(false);
-            setCurrent({
-              tetromino: randomTetromino(),
-              rotation: 0,
-              position: { x: 3, y: 0 },
-            });
-          }}>
+          <button
+            style={{ ...btnStyle, marginTop: 20 }}
+            onClick={() => {
+              setGrid(emptyGrid());
+              setScore(0);
+              setGameOver(false);
+              setCurrent({
+                tetromino: randomTetromino(),
+                rotation: 0,
+                position: { x: 3, y: 0 },
+              });
+            }}
+          >
             Restart
           </button>
         )}
