@@ -26,29 +26,26 @@ export const checkCollision = (grid, tetromino, rotation, position) => {
   return false;
 };
 
+
 export const placeTetromino = (grid, tetromino, rotation, position) => {
   const newGrid = copyGrid(grid);
   const shape = tetromino.shape[rotation];
   const { x, y } = position;
+
   shape.forEach((row, dy) => {
     row.forEach((cell, dx) => {
       if (cell) {
         const newY = y + dy;
         const newX = x + dx;
-        if (
-          newY >= 0 &&
-          newY < ROWS &&
-          newX >= 0 &&
-          newX < COLS
-        ) {
-          newGrid[newY][newX] = tetromino.color;
+        if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
+          newGrid[newY][newX] = tetromino.color; 
         }
       }
     });
   });
+
   return newGrid;
 };
-
 /**
  * Clear full rows, return { newGrid, cleared }
  */
