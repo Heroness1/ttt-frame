@@ -195,14 +195,14 @@ const next = randomTetromino();
 const startPos = { x: Math.floor(COLS / 2) - 2, y: 0 }; 
 
 if (checkCollision(newGrid, next, 0, startPos)) {
-  setGameOver(true);
-  clearInterval(intervalRef.current);
-} else {
-    setCurrent({ tetromino: next, rotation: 0, position: startPos });
-  }
-}; 
+      setGameOver(true);
+      clearInterval(intervalRef.current);
+    } else {
+      setCurrent({ tetromino: next, rotation: 0, position: startPos });
+    }
+  } 
+};
 
-// Game loop
 useEffect(() => {
     if (gameOver) return;
     intervalRef.current = setInterval(tick, 700);
