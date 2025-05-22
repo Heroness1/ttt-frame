@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import FarcasterLoader from "./components/FarcasterLoader";
+import FarcasterLoader from "../FarcasterLoader";
 import TetrisMonadFlash from "../components/TetrisMonadFlash"; // pastikan sudah ada
 
 function NeonLogo() {
