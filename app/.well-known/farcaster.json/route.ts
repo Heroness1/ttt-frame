@@ -1,24 +1,16 @@
-import { NextResponse } from "next/server";
-import { APP_URL } from "../../../lib/constants";
-
-export async function GET() {
-  const farcasterConfig = {
-    // TODO: Add account association
-    frame: {
-      version: "1",
-      name: "Monad Farcaster MiniApp Template",
-      iconUrl: `${APP_URL}/images/icon.png`,
-      homeUrl: `${APP_URL}`,
-      imageUrl: `${APP_URL}/images/feed.png`,
-      screenshotUrls: [],
-      tags: ["monad", "farcaster", "miniapp", "template"],
-      primaryCategory: "developer-tools",
-      buttonTitle: "Launch Template",
-      splashImageUrl: `${APP_URL}/images/splash.png`,
-      splashBackgroundColor: "#ffffff",
-      webhookUrl: `${APP_URL}/api/webhook`,
-    },
-  };
-
-  return NextResponse.json(farcasterConfig);
+{
+  "frame": {
+    "version": "1",
+    "name": "Tetra MON",
+    "iconUrl": "https://ttt-frame.vercel.app/images/icon.png",
+    "homeUrl": "https://ttt-frame.vercel.app",
+    "imageUrl": "https://ttt-frame.vercel.app/images/feed.png",
+    "screenshotUrls": [],
+    "tags": ["monad", "game", "farcaster"],
+    "primaryCategory": "developer-tools",
+    "buttonTitle": "Play Now",
+    "splashImageUrl": "https://ttt-frame.vercel.app/images/splash.png",
+    "splashBackgroundColor": "#ffffff",
+    "webhookUrl": "https://ttt-frame.vercel.app/api/webhook"
+  }
 }
