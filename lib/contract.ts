@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { CONTRACT_ADDRESS, ABI } from "./constants";
+import { CONTRACT_ADDRESS, ABI } from "./constant";
 
 const rpcUrl = process.env.MONAD_RPC_URL!;
 const privateKey = process.env.PRIVATE_KEY!;
@@ -18,3 +18,5 @@ export async function getScore(userAddress: string) {
   const score = await contract.getScore(userAddress);
   return score;
 }
+
+export { wallet };
