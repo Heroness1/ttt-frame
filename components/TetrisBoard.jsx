@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { ROWS, COLS, VISIBLE_ROWS, emptyGrid, checkCollision, placeTetromino, clearRows } from "./gridUtils";
 import { runExplosions } from "./explosionUtils";
