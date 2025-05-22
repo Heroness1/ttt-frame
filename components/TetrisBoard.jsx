@@ -270,40 +270,40 @@ useEffect(() => {
 
   // ... grid
 const renderGrid = () => {
-    const visibleGrid = grid.slice(ROWS - VISIBLE_ROWS);
-    const display = visibleGrid.map(row => [...row]);
-    const { x, y } = current.position;
-    const visibleY = y - (ROWS - VISIBLE_ROWS);
+  const visibleGrid = grid.slice(ROWS - VISIBLE_ROWS);
+  const display = visibleGrid.map(row => [...row]);
+  const { x, y } = current.position;
+  const visibleY = y - (ROWS - VISIBLE_ROWS);
 
-    current.tetromino.shape[current.rotation].forEach((row, dy) => {
-      row.forEach((cell, dx) => {
-        if (cell) {
-          const newY = visibleY + dy;
-          const newX = x + dx;
-          if (newY >= 0 && newY < VISIBLE_ROWS && newX >= 0 && newX < COLS) {
-            display[newY][newX] = current.tetromino.color;
-          }
+  current.tetromino.shape[current.rotation].forEach((row, dy) => {
+    row.forEach((cell, dx) => {
+      if (cell) {
+        const newY = visibleY + dy;
+        const newX = x + dx;
+        if (newY >= 0 && newY < VISIBLE_ROWS && newX >= 0 && newX < COLS) {
+          display[newY][newX] = { color: current.tetromino.color }; 
         }
-      });
+      }
     });
+  });
 
-    return display.map((row, yIdx) => (
-      <div key={yIdx} style={{ display: "flex" }}>
-        {row.map((cell, xIdx) => (
-          <div
-            key={xIdx}
-            className={cell?.exploded ? "explode" : ""}
-            style={{
-              width: 25,
-              height: 25,
-              backgroundColor: cell?.color || "#222",
-              border: "1px solid #444",
-            }}
-          />
-        ))}
-      </div>
-    ));
-  };
+  return display.map((row, yIdx) => (
+    <div key={yIdx} style={{ display: "flex" }}>
+      {row.map((cell, xIdx) => (
+        <div
+          key={xIdx}
+          className={cell?.exploded ? "explode" : ""}
+          style={{
+            width: 25,
+            height: 25,
+            backgroundColor: cell?.color || "#222",
+            border: "1px solid #444",
+          }}
+        />
+      ))}
+    </div>
+  ));
+};
 
   return (
     <div
