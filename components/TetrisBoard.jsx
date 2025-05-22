@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ROWS, COLS, emptyGrid, checkCollision, placeTetromino, clearRows } from "./gridUtils";
+import { ROWS, COLS, VISIBLE_ROWS, emptyGrid, checkCollision, placeTetromino, clearRows } from "./gridUtils";
 import { runExplosions } from "./explosionUtils";
 import "./explode.css";
 
@@ -322,17 +322,16 @@ const renderGrid = () => {
           High Score: {highScore}
         </h3>
         <div
-          style={{
-            width: COLS * 25,
-            backgroundColor: "#000",
-            padding: 10,
-            borderRadius: 10,
-            border: "2px solid #0ff",
-          }}
-        >
-          {renderGrid()}
-        </div>
-
+          // Di komponen
+<div 
+  className="grid-container"
+  style={{
+    width: COLS * 25 + 20,
+    height: VISIBLE_ROWS * 25
+  }}
+>
+  {renderGrid()}
+</div>
         <div
           style={{
             marginTop: 30,
