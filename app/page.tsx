@@ -14,7 +14,7 @@ export default function Home() {
             "postUrl":"https://ttt-frame.vercel.app/api/frame"
           }'
         />
-        <title>Tetra</title>
+        <title>TetraMON</title>
       </Head>
       <NadShoott />
     </>
