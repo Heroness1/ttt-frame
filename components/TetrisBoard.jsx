@@ -255,6 +255,19 @@ useEffect(() => {
     setCurrent({ tetromino: randomTetromino(), rotation: 0, position: { x: 3, y: 0 } });
   };
 
+  //Style Object
+  const btnStyle = {
+    backgroundColor: "#333",
+    border: "2px solid #0ff",
+    borderRadius: 6,
+    padding: "8px 12px",
+    color: "white",
+    fontWeight: "bold",
+    fontFamily: "monospace",
+    cursor: "pointer",
+    minWidth: 60,
+  };
+
   // ... grid
 const renderGrid = () => {
     const visibleGrid = grid.slice(ROWS - VISIBLE_ROWS);
@@ -328,10 +341,10 @@ const renderGrid = () => {
         style={{
           width: COLS * 25 + 20,
           height: VISIBLE_ROWS * 25,
-          backgroundColor: "#000", // Tambahkan ini
-          borderRadius: 10, // Tambahkan ini
-          border: "2px solid #0ff", // Tambahkan ini
-          overflow: "hidden", // Tambahkan ini
+          backgroundColor: "#000", 
+          borderRadius: 10,  
+          border: "2px solid #0ff", 
+          overflow: "hidden",  
         }}
       >
         {renderGrid()}
