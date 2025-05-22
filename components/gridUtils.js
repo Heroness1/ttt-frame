@@ -39,6 +39,7 @@ export const placeTetromino = (grid, tetromino, rotation, position) => {
         const newX = x + dx;
         if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
           newGrid[newY][newX] = { color: tetromino.color };
+        }
       }
     });
   });
