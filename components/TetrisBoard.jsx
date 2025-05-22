@@ -192,8 +192,10 @@ export default function TetrisBoard() {
 
     
 const next = randomTetromino();
-const startPos = { x: Math.floor(COLS / 2) - 2, y: 0 }; 
-
+const startPos = { 
+  x: Math.floor(COLS/2) - 2, // 10/2 - 2 = 3 
+  y: ROWS - VISIBLE_ROWS - 2 // 18-14-2=2 
+};
 if (checkCollision(newGrid, next, 0, startPos)) {
       setGameOver(true);
       clearInterval(intervalRef.current);
