@@ -4,8 +4,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const wallet = body.untrustedData?.requester_wallet_address;
 
-  // Simulasi set skor misalnya 100
-  await setScore(wallet, 100); // Tambahin wallet param kalau perlu
+  await setScore(100);
   const score = await getScore(wallet);
 
   console.log("Wallet connected:", wallet, "Score:", score);
