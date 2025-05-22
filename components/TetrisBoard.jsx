@@ -323,104 +323,107 @@ export default function TetrisBoard() {
   };
 
   return (
+  <div
+    style={{
+      backgroundColor: "#000",
+      minHeight: "100vh",
+      padding: 20,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "monospace",
+    }}
+  >
     <div
       style={{
-        backgroundColor: "#000",
-        minHeight: "100vh",
+        backgroundColor: "#111",
+        border: "4px solid #0ff",
+        borderRadius: 20,
         padding: 20,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "monospace",
+        boxShadow: "0 0 30px #0ff",
+        display: "inline-block",
       }}
     >
+      <h2 style={{ color: "white", marginBottom: 5, textAlign: "center" }}>
+        {gameOver ? "GAME OVER" : `Score: ${score}`}
+      </h2>
+      <h3 style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}>
+        High Score: {highScore}
+      </h3>
+
       <div
+        className="grid-container"
         style={{
-          backgroundColor: "#111",
-          border: "4px solid #0ff",
-          borderRadius: 20,
-          padding: 20,
-          boxShadow: "0 0 30px #0ff",
-          display: "inline-block",
+          width: COLS * 25 + 20,
+          height: VISIBLE_ROWS * 25,
+          backgroundColor: "#000",
+          borderRadius: 10,
+          border: "2px solid #0ff",
+          overflow: "hidden",
         }}
       >
-        <h2 style={{ color: "white", marginBottom: 5, textAlign: "center" }}>
-          {gameOver ? "GAME OVER" : `Score: ${score}`}
-        </h2>
-        <h3 style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}>
-          High Score: {highScore}
-        </h3>
+        {renderGrid()}
+      </div>
 
-        <div
-          className="grid-container"
-          style={{
-            width: COLS * 25 + 20,
-            height: VISIBLE_ROWS * 25,
-            backgroundColor: "#000",
-            borderRadius: 10,
-            border: "2px solid #0ff",
-            overflow: "hidden",
-          }}
-        >
-          {renderGrid()}
-        </div>
+      <div
+        style={{
+          marginTop: 30,
+          display: "grid",
+          gridTemplateAreas: `
+            ".    up    ."
+            "left rot right"
+            ".   down  ."
+          `,
+          gridTemplateColumns: "repeat(3, 60px)",
+          gridTemplateRows: "repeat(3, 50px)",
+          justifyContent: "center",
+          gap: 10,
+          userSelect: "none",
+        }}
+      >
+        <button style={{ ...btnStyle, gridArea: "up" }} onClick={() => handleControl("rotate")}>
+          ROTATE
+        </button>
+        <button style={{ ...btnStyle, gridArea: "left" }} onClick={() => handleControl("left")}>
+          LEFT
+        </button>
+        <button style={{ ...btnStyle, gridArea: "right" }} onClick={() => handleControl("right")}>
+          RIGHT
+        </button>
+        <button style={{ ...btnStyle, gridArea: "down" }} onClick={() => handleControl("down")}>
+          DOWN
+        </button>
+      </div>
 
-        <div
-          style={{
-            marginTop: 30,
-            display: "grid",
-            gridTemplateAreas: `
-              ".    up    ."
-              "left rot right"
-              ".   down  ."
-            `,
-            gridTemplateColumns: "repeat(3, 60px)",
-            gridTemplateRows: "repeat(3, 50px)",
-            justifyContent: "center",
-            gap: 10,
-            userSelect: "none",
-          }}
-        >
-          <button style={{ ...btnStyle, gridArea: "up" }} onClick={() => handleControl("rotate")}>
-            ROTATE
+      {gameOver && (
+        <>
+          <button
+            style={{
+              ...btnStyle,
+              marginTop: 20,
+              backgroundColor: "#222",
+              border: "2px solid #ff0",
+              color: "#ff0",
+            }}
+            onClick={restart}
+          >
+            RESTART
           </button>
-          <button style={{ ...btnStyle, gridArea: "left" }} onClick={() => handleControl("left")}>
-            LEFT
+          <button
+            style={{
+              ...btnStyle,
+              marginTop: 10,
+              backgroundColor: "#0f0",
+              border: "2px solid #0f0",
+              color: "#000",
+            }}
+            onClick={shareScore}
+          >
+            SHARE SKOR
           </button>
-          <button style={{ ...btnStyle, gridArea: "right" }} onClick={() => handleControl("right")}>
-            RIGHT
-          </button>
-          <button style={{ ...btnStyle, gridArea: "down" }} onClick={() => handleControl("down")}>
-            DOWN
-          </button>
-        </div>
-
-{gameOver && (
-  <>
-    <button
-      style={{
-        ...btnStyle,
-        marginTop: 20,
-        backgroundColor: "#222",
-        border: "2px solid #ff0",
-        color: "#ff0",
-      }}
-      onClick={restart}
-    >
-      RESTART
-    </button>
-    <button
-      style={{
-        ...btnStyle,
-        marginTop: 10,
-        backgroundColor: "#0f0",
-        border: "2px solid #0f0",
-        color: "#000",
-      }}
-      onClick={shareScore}
-    >
-      SHARE SKOR
-    </button>
-  </>
-)}
+        </>
+      )}
+    </div>
+  </div>
+);
