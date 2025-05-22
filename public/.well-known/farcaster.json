@@ -6,7 +6,7 @@
   },
   "frame": {
     "version": "1",
-    "name": "Example Frame",
+    "name": "TetraMON",
     "iconUrl": "https://ttt-frame.vercel.app/icon.png",
     "homeUrl": "https://ttt-frame.vercel.app",
     "imageUrl": "https://ttt-frame.vercel.app/image.png",
