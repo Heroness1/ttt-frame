@@ -18,28 +18,16 @@ export default function NadShoott() {
   const text = "Break Monad v2";
 
   useEffect(() => {
-    // Cek dulu apakah farcaster.ready tersedia sebelum panggil
-    if (typeof window !== "undefined" && window.farcaster?.ready) {
-      window.farcaster.ready();
-    }
-
-    // Setup suara klik tombol
     const sound = document.getElementById("clickSound") as HTMLAudioElement | null;
     const playClickSound = () => {
       if (sound) {
         sound.currentTime = 0;
-        sound.play().catch(() => {
-          // Ignore play error jika user belum interaksi
-        });
+        sound.play();
       }
     };
-
     const buttons = document.querySelectorAll("button");
     buttons.forEach((btn) => btn.addEventListener("click", playClickSound));
-
-    return () => {
-      buttons.forEach((btn) => btn.removeEventListener("click", playClickSound));
-    };
+    return () => buttons.forEach((btn) => btn.removeEventListener("click", playClickSound));
   }, []);
 
   useEffect(() => {
@@ -55,7 +43,6 @@ export default function NadShoott() {
         if (index === text.length) clearInterval(interval);
       }, 100);
     }, delay);
-
     return () => clearTimeout(timeout);
   }, []);
 
