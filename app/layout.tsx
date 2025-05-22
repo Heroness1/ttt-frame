@@ -1,4 +1,6 @@
-// app/layout.tsx
+"use client";
+
+import { useEffect } from "react";
 
 export const metadata = {
   title: "TetraMON",
@@ -16,12 +18,26 @@ export const metadata = {
   },
   other: {
     "fc:frame": "vNext",
-    "fc:frame:image": "https://yourdomain.vercel.app/og-image.png", 
+    "fc:frame:image": "https://yourdomain.vercel.app/og-image.png",
     "fc:frame:button:1": "Play Now",
     "fc:frame:button:1:action": "post_redirect",
-    "fc:frame:post_url": "https://ttt-frame.vercel.app/game", 
+    "fc:frame:post_url": "https://ttt-frame.vercel.app/game",
   },
 };
+
+function RootLayoutClient({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/@farcaster/frame-sdk/dist/index.min.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  return <>{children}</>;
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -39,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body style={{ fontFamily: '"Press Start 2P", monospace' }}>
-        {children}
+        <RootLayoutClient>{children}</RootLayoutClient>
       </body>
     </html>
   );
