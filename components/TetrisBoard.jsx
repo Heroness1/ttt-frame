@@ -257,60 +257,39 @@ useEffect(() => {
 
   // ... grid
 const renderGrid = () => {
-  const display = grid.map((row) => row.map(cell => cell && cell.color ? cell : cell));
-  const shape = current.tetromino.shape[current.rotation];
-  const { x, y } = current.position;
-  shape.forEach((row, dy) => {
-    row.forEach((cell, dx) => {
-      if (cell) {
-        const newY = y + dy;
-        const newX = x + dx;
-        if (newY >= 0 && newY < ROWS && newX >= 0 && newX < COLS) {
-          display[newY][newX] = current.tetromino.color;
+    const visibleGrid = grid.slice(ROWS - VISIBLE_ROWS);
+    const display = visibleGrid.map(row => [...row]);
+    const { x, y } = current.position;
+    const visibleY = y - (ROWS - VISIBLE_ROWS);
+
+    current.tetromino.shape[current.rotation].forEach((row, dy) => {
+      row.forEach((cell, dx) => {
+        if (cell) {
+          const newY = visibleY + dy;
+          const newX = x + dx;
+          if (newY >= 0 && newY < VISIBLE_ROWS && newX >= 0 && newX < COLS) {
+            display[newY][newX] = current.tetromino.color;
+          }
         }
-      }
+      });
     });
-  });
-  return display.map((row, yIdx) => (
-    <div key={yIdx} style={{ display: "flex" }}>
-      {row.map((cell, xIdx) => {
-        let color = null;
-        let exploded = false;
-        if (cell && typeof cell === "object") {
-          color = cell.color;
-          exploded = cell.exploded;
-        } else if (typeof cell === "string") {
-          color = cell;
-        }
-        return (
+
+    return display.map((row, yIdx) => (
+      <div key={yIdx} style={{ display: "flex" }}>
+        {row.map((cell, xIdx) => (
           <div
             key={xIdx}
-            className={exploded ? "explode" : ""}
+            className={cell?.exploded ? "explode" : ""}
             style={{
               width: 25,
               height: 25,
-              backgroundColor: color || "#222",
+              backgroundColor: cell?.color || "#222",
               border: "1px solid #444",
-              boxSizing: "border-box",
-              transition: "background 0.2s",
             }}
           />
-        );
-      })}
-    </div>
-  ));
-};
-
-  const btnStyle = {
-    backgroundColor: "#333",
-    border: "2px solid #0ff",
-    borderRadius: 6,
-    padding: "8px 12px",
-    color: "white",
-    fontWeight: "bold",
-    fontFamily: "monospace",
-    cursor: "pointer",
-    minWidth: 60,
+        ))}
+      </div>
+    ));
   };
 
   return (
