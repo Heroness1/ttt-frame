@@ -396,7 +396,7 @@ export default function TetrisBoard() {
           </button>
         </div>
 
-        {gameOver && (
+{gameOver && (
   <>
     <button
       style={{
@@ -424,9 +424,3 @@ export default function TetrisBoard() {
     </button>
   </>
 )}
-        
-        )}
-      </div>
-    </div>
-  );
-}
