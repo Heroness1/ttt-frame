@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import TetrisBoard from "../components/TetrisBoard";
+import TetrisBoard from "../../components/TetrisBoard";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "ttt-frame.vercel.app";
 
