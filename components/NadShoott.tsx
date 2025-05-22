@@ -4,9 +4,6 @@ import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import TetrisMonadFlash from "../components/TetrisMonadFlash";
 
-// Tambahkan import ready
-import { ready } from "@farcaster/miniapps-sdk";
-
 function NeonLogo() {
   return (
     <h1 className="text-5xl font-bold text-purple-400 neon-purple-text">
@@ -21,8 +18,10 @@ export default function NadShoott() {
   const text = "Break Monad v2";
 
   useEffect(() => {
-    // Panggil ready() di sini sekali saat komponen mount
-    ready();
+    // Akses SDK dari window.farcaster (bukan import)
+    if (typeof window !== "undefined" && window.farcaster?.ready) {
+      window.farcaster.ready();
+    }
 
     const sound = document.getElementById("clickSound") as HTMLAudioElement | null;
     const playClickSound = () => {
