@@ -1,6 +1,6 @@
-export const ROWS = 14;
+export const ROWS = 18;
 export const COLS = 10;
-
+export const VISIBLE_ROWS = 14;
 export const emptyGrid = () =>
   Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 
