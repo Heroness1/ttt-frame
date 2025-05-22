@@ -30,7 +30,16 @@ function RootLayoutClient({ children }: { children: React.ReactNode }) {
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/@farcaster/frame-sdk/dist/index.min.js";
     script.async = true;
+
+    script.onload = () => {
+      if (window.farcaster?.ready) {
+        window.farcaster.ready();
+        console.log("Farcaster SDK ready!");
+      }
+    };
+
     document.body.appendChild(script);
+
     return () => {
       document.body.removeChild(script);
     };
