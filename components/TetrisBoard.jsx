@@ -395,18 +395,20 @@ const renderGrid = () => {
             DOWN
           </button>
         </div>
-        <button
-          style={{
-            ...btnStyle,
-            marginTop: 20,
-            backgroundColor: "#222",
-            border: "2px solid #ff0",
-            color: "#ff0",
-          }}
-          onClick={restart}
-        >
-          RESTART
-        </button>
+        {gameOver && (
+  <button
+    style={{
+      ...btnStyle,
+      marginTop: 20,
+      backgroundColor: "#222",
+      border: "2px solid #ff0",
+      color: "#ff0",
+    }}
+    onClick={restart}
+  >
+    RESTART
+  </button>
+)}
       </div>
     </div>
   );
