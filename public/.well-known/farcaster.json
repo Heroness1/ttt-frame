@@ -2,6 +2,20 @@
   "accountAssociation": {
     "header": "eyJmaWQiOjMzMjgwOSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDdhNTBCNGVjMjY0YTNjN2UzNGUxZWMyZUNjNTgyYWI0MjczZmNDZEEifQ",
     "payload": "eyJkb21haW4iOiJ0dHQtZnJhbWUudmVyY2VsLmFwcCJ9",
-    "signature": "MHgxYjQzYzlhZTM5MzVmMDcwY2MzYWNjNGMxMWYyMDg5MjQ0MTI1MTFjNmNmMDM2NzNkZGM3N2FkZDI2ODI5ZDIyMWJmOGQ5MDlmN2UxNGU2MDNjNjE2MzMwMjI1ZDE5ODY4ODIxZGE3MjMzZDBlZjgwZjU1ZjZlNGNkZWM0NjA0YjFi"
+    "signature": "0xc6ff6d8e2bbb7b1c0f2f7346b260b416c58d92eaf9afe7e691c1b1cafb51a5203af40c7d5a9490d85508df142c979ffc8fab096ee14a411ea87fd660aed9dd381c"
+  },
+  "frame": {
+    "version": "1",
+    "name": "Tetra MON",
+    "iconUrl": "https://ttt-frame.vercel.app/images/icon.png",
+    "homeUrl": "https://ttt-frame.vercel.app",
+    "imageUrl": "https://ttt-frame.vercel.app/images/feed.png",
+    "screenshotUrls": [],
+    "tags": ["monad", "farcaster", "miniapp", "game"],
+    "primaryCategory": "developer-tools",
+    "buttonTitle": "Play",
+    "splashImageUrl": "https://ttt-frame.vercel.app/images/splash.png",
+    "splashBackgroundColor": "#ffffff",
+    "webhookUrl": "https://ttt-frame.vercel.app/api/webhook"
   }
 }
