@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import TetrisMonadFlash from "../components/TetrisMonadFlash";
 
 function NeonLogo() {
   return (
@@ -11,6 +13,7 @@ function NeonLogo() {
 }
 
 export default function NadShoott() {
+  const router = useRouter();
   const typewriterRef = useRef<HTMLParagraphElement>(null);
   const text = "Break Monad v2";
 
@@ -43,13 +46,9 @@ export default function NadShoott() {
     return () => clearTimeout(timeout);
   }, []);
 
-  const goToGame = () => {
-    window.location.href = "/game";
-  };
-
   return (
-    <div className="text-white min-h-screen flex items-center justify-center px-4 bg-gray-900">
-      <div className="w-full max-w-xl border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
+    <div className="text-white min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-xl bg-gray-900 border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
 
         <header className="text-center animate-fade-in-up">
           <NeonLogo />
@@ -57,13 +56,12 @@ export default function NadShoott() {
         </header>
 
         <section className="flex justify-center">
-          {/* Kalau ada komponen ini pastikan sudah di-import */}
-          {/* <TetrisMonadFlash boxSize={14} spacing={1} /> */}
+          <TetrisMonadFlash boxSize={14} spacing={1} />
         </section>
 
-        <section className="grid grid-cols-1 max-w-md mx-auto gap-3 justify-center">
+        <section className="grid grid-cols-1 sm:grid-cols-2 max-w-md mx-auto gap-3 justify-center">
           <button
-            onClick={goToGame}
+            onClick={() => router.push("/game")}
             className="
               bg-cyan-500 
               hover:bg-cyan-600 
@@ -81,10 +79,9 @@ export default function NadShoott() {
           </button>
         </section>
 
-        <footer className="text-center text-xs text-gray-400 pt-4 border-t border-gray-700">
+        <footer className="text-center text-xs text-gray-600 pt-4 border-t border-gray-700">
           TetraMON by Lure369.nad
         </footer>
-
       </div>
 
       <audio
