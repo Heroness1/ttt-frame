@@ -181,14 +181,18 @@ export default function TetrisBoard() {
       });
     }
 
-    const { finalGrid, totalScore } = runExplosions(clearedGrid);
-    if (totalScore > 0) {
-      setScore((prev) => {
-        scoreRef.current = prev + totalScore;
-        return prev + totalScore;
-      });
-    }
-    setGrid(finalGrid);
+    let finalGrid = clearedGrid;
+if (cleared > 0) {
+  const result = runExplosions(clearedGrid);
+  finalGrid = result.finalGrid;
+  if (result.totalScore > 0) {
+    setScore((prev) => {
+      scoreRef.current = prev + result.totalScore;
+      return prev + result.totalScore;
+    });
+  }
+}
+setGrid(finalGrid);
 
     
 const next = randomTetromino();
