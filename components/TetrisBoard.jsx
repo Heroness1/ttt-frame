@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ready } from "@farcaster/miniapps-sdk";
 import { ROWS, COLS, VISIBLE_ROWS, emptyGrid, checkCollision, placeTetromino, clearRows } from "./gridUtils";
 import { runExplosions } from "./explosionUtils";
 import "./explode.css";
@@ -162,6 +163,13 @@ export default function TetrisBoard() {
       localStorage.setItem("tetris-high-score", score.toString());
     }
   }, [score, highScore]);
+
+  export default function TetrisBoard() {
+  useEffect(() => {
+    ready();
+  }, []);
+
+
 
   const tick = () => {
   if (gameOver) return;
