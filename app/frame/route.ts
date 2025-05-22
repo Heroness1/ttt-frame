@@ -2,11 +2,11 @@ export async function GET() {
   return new Response(
     JSON.stringify({
       "@context": "https://w3id.org/farcaster/frames/v1.0.0",
-      "frame:image": "https://ttt-frame.vercel.app/api/og",
+      "frame:image": "https://ttt-frame.vercel.app/og",
       "frame:buttons": [
         { label: "Connect Wallet", action: "post" }
       ],
-      "frame:post_url": "https://ttt-frame.vercel.app/api/frame",
+      "frame:post_url": "https://ttt-frame.vercel.app/frame",
       "frame:requires": "wallet"
     }),
     {
@@ -28,9 +28,9 @@ export async function POST(req: Request) {
       "@context": "https://w3id.org/farcaster/frames/v1.0.0",
       "frame:image": `https://ttt-frame.vercel.app/api/og?wallet=${wallet}`,
       "frame:buttons": [
-        { label: "Main Lagi", action: "post" }
+        { label: "Play Again", action: "post" }
       ],
-      "frame:post_url": "https://ttt-frame.vercel.app/api/frame"
+      "frame:post_url": "https://ttt-frame.vercel.app/frame"
     }),
     {
       headers: {
