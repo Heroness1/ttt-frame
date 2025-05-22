@@ -321,17 +321,22 @@ const renderGrid = () => {
         <h3 style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}>
           High Score: {highScore}
         </h3>
-        <div
-          // Di komponen
-<div 
-  className="grid-container"
-  style={{
-    width: COLS * 25 + 20,
-    height: VISIBLE_ROWS * 25
-  }}
->
-  {renderGrid()}
-</div>
+   
+        <div 
+      
+        className="grid-container"
+        style={{
+          width: COLS * 25 + 20,
+          height: VISIBLE_ROWS * 25,
+          backgroundColor: "#000", // Tambahkan ini
+          borderRadius: 10, // Tambahkan ini
+          border: "2px solid #0ff", // Tambahkan ini
+          overflow: "hidden", // Tambahkan ini
+        }}
+      >
+        {renderGrid()}
+      </div>
+      
         <div
           style={{
             marginTop: 30,
