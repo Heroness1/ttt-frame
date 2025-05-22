@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  ROWS,
-  COLS,
-  VISIBLE_ROWS,
-  emptyGrid,
-  checkCollision,
-  placeTetromino,
-  clearRows,
-} from "./gridUtils";
+import { ROWS, COLS, VISIBLE_ROWS, emptyGrid, checkCollision, placeTetromino, clearRows } from "./gridUtils";
 import { runExplosions } from "./explosionUtils";
 import "./explode.css";
 
@@ -157,25 +149,13 @@ export default function TetrisBoard() {
   const [gameOver, setGameOver] = useState(false);
   const intervalRef = useRef(null);
 
+  // Load high score dari localStorage
   useEffect(() => {
-    ready(); // Initialize Farcaster SDK
     const saved = localStorage.getItem("tetris-high-score");
     if (saved) setHighScore(parseInt(saved, 10));
   }, []);
-  const shareScore = () => {
-    const message = `I got ${scoreRef.current} come join play!`;
-    postFrameMessage({
-      text: message,
-      button: {
-        label: "Play",
-        action: "link",
-        target: "https://ttt-frame.vercel.app/",
-      },
-    });
-  };
 
-  
-
+  // Save high score kalau score lebih tinggi
   useEffect(() => {
     if (score > highScore) {
       setHighScore(score);
@@ -184,57 +164,62 @@ export default function TetrisBoard() {
   }, [score, highScore]);
 
   const tick = () => {
-    if (gameOver) return;
-    const { x, y } = current.position;
+  if (gameOver) return;
+  const { x, y } = current.position;
 
-    if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
-      setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
-    } else {
-      let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
-      const { newGrid: clearedGrid, cleared } = clearRows(newGrid);
+  if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
+    setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
+  } else {
+    let newGrid = placeTetromino(grid, current.tetromino, current.rotation, current.position);
 
-      let finalGrid = clearedGrid;
-      if (cleared > 0) {
-        const points = cleared * 100;
-        setScore((prev) => {
-          scoreRef.current = prev + points;
-          return prev + points;
-        });
-
-        const result = runExplosions(clearedGrid);
-        finalGrid = result.finalGrid;
-        if (result.totalScore > 0) {
-          setScore((prev) => {
-            scoreRef.current = prev + result.totalScore;
-            return prev + result.totalScore;
-          });
-        }
-      }
-
-      setGrid(finalGrid);
-
-      const next = randomTetromino();
-      const startPos = {
-        x: Math.floor(COLS / 2) - 2,
-        y: ROWS - VISIBLE_ROWS - 2,
-      };
-      if (checkCollision(newGrid, next, 0, startPos)) {
-        setGameOver(true);
-        clearInterval(intervalRef.current);
-      } else {
-        setCurrent({ tetromino: next, rotation: 0, position: startPos });
-      }
+    const { newGrid: clearedGrid, cleared } = clearRows(newGrid);
+    if (cleared > 0) {
+      const points = cleared * 100;
+      setScore((prev) => {
+        scoreRef.current = prev + points;
+        return prev + points;
+      });
     }
-  };
 
-  useEffect(() => {
+    let finalGrid = clearedGrid;
+if (cleared > 0) {
+  const result = runExplosions(clearedGrid);
+  finalGrid = result.finalGrid;
+  if (result.totalScore > 0) {
+    setScore((prev) => {
+      scoreRef.current = prev + result.totalScore;
+      return prev + result.totalScore;
+    });
+  }
+}
+setGrid(finalGrid);
+
+    
+const next = randomTetromino();
+const startPos = { 
+  x: Math.floor(COLS/2) - 2, // 10/2 - 2 = 3 
+  y: ROWS - VISIBLE_ROWS - 2 // 18-14-2=2 
+};
+if (checkCollision(newGrid, next, 0, startPos)) {
+      setGameOver(true);
+      clearInterval(intervalRef.current);
+    } else {
+      setCurrent({ tetromino: next, rotation: 0, position: startPos });
+    }
+  } 
+};
+
+useEffect(() => {
     if (gameOver) return;
     intervalRef.current = setInterval(tick, 700);
     return () => clearInterval(intervalRef.current);
+    // eslint-disable-next-line
   }, [current, gameOver, grid]);
 
+  // Kontrol input
   const handleControl = (direction) => {
     if (gameOver) return;
+
     const { x, y } = current.position;
     let rotation = current.rotation;
 
@@ -265,6 +250,7 @@ export default function TetrisBoard() {
     }
   };
 
+  // Restart game
   const restart = () => {
     setGrid(emptyGrid());
     setScore(0);
@@ -273,6 +259,7 @@ export default function TetrisBoard() {
     setCurrent({ tetromino: randomTetromino(), rotation: 0, position: { x: 3, y: 0 } });
   };
 
+  //Style Object
   const btnStyle = {
     backgroundColor: "#333",
     border: "2px solid #0ff",
@@ -285,41 +272,42 @@ export default function TetrisBoard() {
     minWidth: 60,
   };
 
-  const renderGrid = () => {
-    const visibleGrid = grid.slice(ROWS - VISIBLE_ROWS);
-    const display = visibleGrid.map((row) => [...row]);
-    const { x, y } = current.position;
-    const visibleY = y - (ROWS - VISIBLE_ROWS);
+  // ... grid
+const renderGrid = () => {
+  const visibleGrid = grid.slice(ROWS - VISIBLE_ROWS);
+  const display = visibleGrid.map(row => [...row]);
+  const { x, y } = current.position;
+  const visibleY = y - (ROWS - VISIBLE_ROWS);
 
-    current.tetromino.shape[current.rotation].forEach((row, dy) => {
-      row.forEach((cell, dx) => {
-        if (cell) {
-          const newY = visibleY + dy;
-          const newX = x + dx;
-          if (newY >= 0 && newY < VISIBLE_ROWS && newX >= 0 && newX < COLS) {
-            display[newY][newX] = { color: current.tetromino.color };
-          }
+  current.tetromino.shape[current.rotation].forEach((row, dy) => {
+    row.forEach((cell, dx) => {
+      if (cell) {
+        const newY = visibleY + dy;
+        const newX = x + dx;
+        if (newY >= 0 && newY < VISIBLE_ROWS && newX >= 0 && newX < COLS) {
+          display[newY][newX] = { color: current.tetromino.color }; 
         }
-      });
+      }
     });
+  });
 
-    return display.map((row, yIdx) => (
-      <div key={yIdx} style={{ display: "flex" }}>
-        {row.map((cell, xIdx) => (
-          <div
-            key={xIdx}
-            className={cell?.exploded ? "explode" : ""}
-            style={{
-              width: 25,
-              height: 25,
-              backgroundColor: cell?.color || "#222",
-              border: "1px solid #444",
-            }}
-          />
-        ))}
-      </div>
-    ));
-  };
+  return display.map((row, yIdx) => (
+    <div key={yIdx} style={{ display: "flex" }}>
+      {row.map((cell, xIdx) => (
+        <div
+          key={xIdx}
+          className={cell?.exploded ? "explode" : ""}
+          style={{
+            width: 25,
+            height: 25,
+            backgroundColor: cell?.color || "#222",
+            border: "1px solid #444",
+          }}
+        />
+      ))}
+    </div>
+  ));
+};
 
   return (
     <div
@@ -350,21 +338,22 @@ export default function TetrisBoard() {
         <h3 style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}>
           High Score: {highScore}
         </h3>
-
-        <div
-          className="grid-container"
-          style={{
-            width: COLS * 25 + 20,
-            height: VISIBLE_ROWS * 25,
-            backgroundColor: "#000",
-            borderRadius: 10,
-            border: "2px solid #0ff",
-            overflow: "hidden",
-          }}
-        >
-          {renderGrid()}
-        </div>
-
+   
+        <div 
+      
+        className="grid-container"
+        style={{
+          width: COLS * 25 + 20,
+          height: VISIBLE_ROWS * 25,
+          backgroundColor: "#000", 
+          borderRadius: 10,  
+          border: "2px solid #0ff", 
+          overflow: "hidden",  
+        }}
+      >
+        {renderGrid()}
+      </div>
+      
         <div
           style={{
             marginTop: 30,
@@ -406,35 +395,20 @@ export default function TetrisBoard() {
             DOWN
           </button>
         </div>
-
         {gameOver && (
-          <>
-            <button
-              style={{
-                ...btnStyle,
-                marginTop: 20,
-                backgroundColor: "#222",
-                border: "2px solid #ff0",
-                color: "#ff0",
-              }}
-              onClick={restart}
-            >
-              RESTART
-            </button>
-            <button
-              style={{
-                ...btnStyle,
-                marginTop: 10,
-                backgroundColor: "#0f0",
-                border: "2px solid #0f0",
-                color: "#000",
-              }}
-              onClick={shareScore}
-            >
-              SHARE SKOR
-            </button>
-          </>
-        )}
+  <button
+    style={{
+      ...btnStyle,
+      marginTop: 20,
+      backgroundColor: "#222",
+      border: "2px solid #ff0",
+      color: "#ff0",
+    }}
+    onClick={restart}
+  >
+    RESTART
+  </button>
+)}
       </div>
     </div>
   );
