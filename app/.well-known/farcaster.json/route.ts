@@ -11,12 +11,12 @@ export async function GET() {
       version: "1",
       name: "TetraMON",
       iconUrl: "https://ttt-frame.vercel.app/icon.png",
-      homeUrl: "https://ttt-frame.vercel.app",
+      homeUrl: "https://ttt-frame.vercel.app/game",  // langsung ke halaman game
       imageUrl: "https://ttt-frame.vercel.app/image.png",
       screenshotUrls: [],
       tags: ["monad", "farcaster", "miniapp", "game"],
       primaryCategory: "developer-tools",
-      buttonTitle: "Check this out",
+      buttonTitle: "Play Now",
       splashImageUrl: "https://ttt-frame.vercel.app/splash.png",
       splashBackgroundColor: "#eeccff",
       webhookUrl: "https://ttt-frame.vercel.app/api/webhook"
