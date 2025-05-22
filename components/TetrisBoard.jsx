@@ -397,31 +397,32 @@ export default function TetrisBoard() {
         </div>
 
         {gameOver && (
-          <button
-            style={{
-              ...btnStyle,
-              marginTop: 20,
-              backgroundColor: "#222",
-              border: "2px solid #ff0",
-              color: "#ff0",
-            }}
-            onClick={restart}
-          >
-            RESTART
-          </button>
-        {gameOver && (
-  <button
-    style={{
-      ...btnStyle,
-      marginTop: 10,
-      backgroundColor: "#0f0",
-      border: "2px solid #0f0",
-      color: "#000",
-    }}
-    onClick={shareScore}
-  >
-    SHARE SKOR
-  </button>
+  <>
+    <button
+      style={{
+        ...btnStyle,
+        marginTop: 20,
+        backgroundColor: "#222",
+        border: "2px solid #ff0",
+        color: "#ff0",
+      }}
+      onClick={restart}
+    >
+      RESTART
+    </button>
+    <button
+      style={{
+        ...btnStyle,
+        marginTop: 10,
+        backgroundColor: "#0f0",
+        border: "2px solid #0f0",
+        color: "#000",
+      }}
+      onClick={shareScore}
+    >
+      SHARE SKOR
+    </button>
+  </>
 )}
         
         )}
