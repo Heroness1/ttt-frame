@@ -210,6 +210,7 @@ if (checkCollision(newGrid, next, 0, startPos)) {
     }
   } 
 };
+};
 
 useEffect(() => {
     if (gameOver) return;
