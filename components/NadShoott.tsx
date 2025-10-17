@@ -61,7 +61,12 @@ export default function NadShoott() {
       });
 
       const ethereum = MMSDK.getProvider();
-      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+
+if (!ethereum) {
+  throw new Error("MetaMask provider not found");
+}
+
+const accounts = await ethereum.request({ method: "eth_requestAccounts" });
       setAccount(accounts[0]);
       console.log("Connected Smart Account:", accounts[0]);
     } catch (err) {
