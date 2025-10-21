@@ -1,17 +1,21 @@
 import { createPublicClient, http, parseEther } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { monadTestnet } from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
 import { pimlicoActions } from "permissionless/actions/pimlico";
 import { toSafeSmartAccount } from "permissionless/accounts";
 import { ethers } from "ethers";
 
-// ✅ manual fallback for mode
+// ✅ Manual enum fallback (karena PaymasterMode deprecated)
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
+// 🧩 Environment variables
 const CONTRACT_ADDRESS = "0xb6F7A3e43F2B22e5f73162c29a12c280A8c20db2";
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
+const OWNER_PRIVATE_KEY = process.env.OWNER_PRIVATE_KEY!;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 
+// 🔹 ABI kontrak
 const ABI = [
   {
     inputs: [{ internalType: "uint256", name: "score", type: "uint256" }],
@@ -29,8 +33,9 @@ const ABI = [
   },
 ];
 
-// 🧠 Smart Account client (via Pimlico)
-async function getSmartAccountClient(signerAddress: string) {
+// 🧠 Membuat Smart Account client yang valid
+async function getSmartAccountClient(signerPrivateKey: string) {
+  // Buat Viem client + extend dengan Pimlico bundler
   const client = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
@@ -43,19 +48,16 @@ async function getSmartAccountClient(signerAddress: string) {
     })
   );
 
-  // ✅ Manual RegularOwner (bypass privateKeyToAccount)
-  const dummyOwner = {
-    address: signerAddress as `0x${string}`,
-    type: "json-rpc",
-    source: "manual",
-    sign: async () => "0x" as `0x${string}`,
-  };
+  // ✅ Buat owner valid (Account Viem)
+  const signerAccount = privateKeyToAccount(signerPrivateKey as `0x${string}`);
 
+  // ✅ Buat smart account via Safe model
   const smartAccount = await toSafeSmartAccount({
     client,
-    owners: [dummyOwner],
+    owners: [signerAccount],
   });
 
+  // ✅ Create Smart Account Client ready to send userOps
   return await createSmartAccountClient({
     chain: monadTestnet,
     account: smartAccount,
@@ -67,10 +69,11 @@ async function getSmartAccountClient(signerAddress: string) {
   });
 }
 
-// 💾 Save score ke blockchain (gasless)
-export async function saveScoreSmart(signerAddress: string, score: number) {
+// 💾 Fungsi untuk menyimpan skor (gasless)
+export async function saveScoreSmart(score: number) {
   try {
-    const smartAccount = await getSmartAccountClient(signerAddress);
+    // Ambil private key owner dari env (bisa diganti kalau multi-user)
+    const smartAccount = await getSmartAccountClient(OWNER_PRIVATE_KEY);
 
     const iface = new ethers.Interface(ABI);
     const data = iface.encodeFunctionData("saveScore", [score]);
@@ -81,6 +84,7 @@ export async function saveScoreSmart(signerAddress: string, score: number) {
       value: parseEther("0"),
     };
 
+    // 🔥 Kirim sebagai user operation (gasless)
     const userOpHash = await smartAccount.sendUserOperation({
       calls: [tx],
     });
@@ -93,7 +97,7 @@ export async function saveScoreSmart(signerAddress: string, score: number) {
   }
 }
 
-// 📊 Fetch score (read-only)
+// 📊 Fungsi untuk membaca skor (read-only)
 export async function getScore(player: string) {
   const provider = new ethers.JsonRpcProvider(RPC_URL);
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
