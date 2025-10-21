@@ -1,18 +1,16 @@
-import { createPublicClient, http, parseEther } from "viem";
+import { createPublicClient, http, parseEther, privateKeyToAccount } from "viem"; // ✅ tambahkan ini
 import { monadTestnet } from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
 import { pimlicoActions } from "permissionless/actions/pimlico";
-import { toSafeSmartAccount } from "permissionless/accounts"; // ✅ FIXED NAME
+import { toSafeSmartAccount } from "permissionless/accounts";
 import { ethers } from "ethers";
 
-// ✅ manual fallback for mode
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
 const CONTRACT_ADDRESS = "0xb6F7A3e43F2B22e5f73162c29a12c280A8c20db2";
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 
-// ABI
 const ABI = [
   {
     inputs: [{ internalType: "uint256", name: "score", type: "uint256" }],
@@ -39,15 +37,19 @@ async function getSmartAccountClient(signerAddress: string) {
     pimlicoActions({
       entryPoint: {
         address: "0x0000000000000000000000000000000000000000",
-        version: "v0.7" as any, // ✅ still valid
+        version: "v0.7" as any,
       },
     })
   );
 
-  // ✅ pakai toSafeSmartAccount (bukan toSmartAccount)
+  // ✅ buat dummy RegularOwner biar sesuai tipe
+  const dummyOwner = privateKeyToAccount(
+    "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  );
+
   const smartAccount = await toSafeSmartAccount({
     client,
-    owners: [signerAddress as `0x${string}`],
+    owners: [dummyOwner], // ✅ FIXED: object, bukan string
   });
 
   return await createSmartAccountClient({
