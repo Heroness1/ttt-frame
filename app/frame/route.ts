@@ -5,7 +5,7 @@ export async function POST(req: Request) {
   const wallet = body.untrustedData?.requester_wallet_address;
 
   // 💾 Simpan skor ke smart contract via Pimlico (gasless)
-  await saveScoreSmart(wallet, 100);
+  await saveScoreSmart(100);
 
   // 🔍 Ambil skor dari chain
   const score = await getScore(wallet);
