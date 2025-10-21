@@ -2,6 +2,7 @@ import { createSmartAccountClient } from "permissionless";
 import { pimlicoActions } from "permissionless/actions/pimlico";
 import { createPublicClient, encodeFunctionData, http } from "viem";
 import { monadTestnet } from "viem/chains";
+import { type LocalAccount, type SignableMessage } from "viem/accounts";
 import { TETRA_SCORE_ABI, TETRA_SCORE_ADDRESS } from "./tetrascore";
 import { normalizeAddress } from "./utils";
 
@@ -15,7 +16,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const safeWallet = normalizeAddress(wallet);
     console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
-    // Dummy delegation agar tetap bisa jalan tanpa SDK
+    // Dummy delegation
     const delegation = {
       from: safeWallet,
       to: safeWallet,
@@ -24,7 +25,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       timestamp: Date.now(),
     };
 
-    // 1️⃣ Setup Pimlico public client
+    // 1️⃣ Public client dengan Pimlico
     const publicClient = createPublicClient({
       chain: monadTestnet,
       transport: http(RPC_URL),
@@ -37,15 +38,15 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       })
     );
 
-    // 2️⃣ Dummy signer account (mocked local account)
-    const account = {
+    // 2️⃣ Dummy account sesuai tipe LocalAccount
+    const account: LocalAccount = {
       address: safeWallet as `0x${string}`,
-      publicKey: ("0x" + "1".repeat(128)) as `0x${string}`,
+      type: "local",
       source: ("0x" + "2".repeat(64)) as `0x${string}`,
-      type: "local", // ✅ FIX: must be "local" not "EOA"
+      publicKey: ("0x" + "1".repeat(128)) as `0x${string}`,
       signTransaction: async () =>
         ("0x" + "0".repeat(64)) as `0x${string}`,
-      signMessage: async ({ message }: { message: string }) =>
+      signMessage: async ({ message }: { message: SignableMessage }) =>
         ("0x" + "0".repeat(64)) as `0x${string}`,
       signTypedData: async () =>
         ("0x" + "0".repeat(64)) as `0x${string}`,
@@ -54,13 +55,13 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     // 3️⃣ Smart account client
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
-      account, // ✅ now type-safe
+      account,
       bundlerTransport: http(RPC_URL),
       paymaster: { mode: PaymasterMode.SPONSORED },
       delegation,
     });
 
-    // 4️⃣ Encode and send transaction
+    // 4️⃣ Encode call dan kirim user operation
     const data = encodeFunctionData({
       abi: TETRA_SCORE_ABI,
       functionName: "saveScore",
