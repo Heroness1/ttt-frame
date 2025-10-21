@@ -12,12 +12,27 @@ import {
 } from "./gridUtils";
 import { runExplosions } from "./explosionUtils";
 import "./explode.css";
-import { TETRA_SCORE_ADDRESS, TETRA_SCORE_ABI } from "../lib/tetrascore";
-import { connectSmartAccount } from "../lib/metamaskSmart";
+import { TETRA_SCORE_ABI, TETRA_SCORE_ADDRESS } from "../lib/tetrascore";
 import { createSmartAccountClient } from "permissionless";
-import { pimlicoActions } from "permissionless/actions/pimlico";
+import { pimlicoBundlerActions, pimlicoPaymasterActions } from "permissionless/actions/pimlico";
 import { createPublicClient, encodeFunctionData, http } from "viem";
 import { monadTestnet } from "viem/chains";
+
+const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
+const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
+const PAYMASTER_URL = `https://api.pimlico.io/v2/monad-testnet/paymaster?apikey=${PIMLICO_API_KEY}`;
+const PaymasterMode = { SPONSORED: "SPONSORED" };
+
+// 🧩 Delegation mock — jalan tanpa SDK
+async function createMockDelegation(from, to) {
+  return {
+    from,
+    to,
+    validity: "7d",
+    signature: "0x" + "f".repeat(130),
+    timestamp: Date.now(),
+  };
+}
 
 const TETROMINOS = {
   I: { shape: [[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],[[0,0,1,0],[0,0,1,0],[0,0,1,0],[0,0,1,0]]], color: "cyan" },
@@ -35,6 +50,7 @@ const randomTetromino = () => {
   return { ...TETROMINOS[rand], name: rand };
 };
 
+// 🧱 Main Game Component
 export default function TetrisBoard({ wallet }) {
   const [grid, setGrid] = useState(emptyGrid());
   const [current, setCurrent] = useState({
@@ -43,77 +59,13 @@ export default function TetrisBoard({ wallet }) {
     position: { x: 3, y: 0 },
   });
   const [score, setScore] = useState(0);
+  const scoreRef = useRef(score);
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const scoreRef = useRef(score);
   const intervalRef = useRef(null);
-  const [account, setAccount] = useState(null);
 
-  const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
-  const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
-  const PaymasterMode = { SPONSORED: "SPONSORED" };
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const acc = await connectSmartAccount();
-        setAccount(acc);
-        console.log("🧠 Smart Account connected:", acc);
-      } catch (e) {
-        console.error("⚠️ Smart Account connection failed:", e);
-      }
-    })();
-  }, []);
-
-  async function sendScoreToChain(scoreValue) {
-    try {
-      if (!account) throw new Error("Smart Account not connected");
-      setSubmitting(true);
-
-      const publicClient = createPublicClient({
-        chain: monadTestnet,
-        transport: http(RPC_URL),
-      }).extend(
-        pimlicoActions({
-          entryPoint: {
-            address: "0x0000000000000000000000000000000000000000",
-            version: "0.7",
-          },
-        })
-      );
-
-      const smartAccount = await createSmartAccountClient({
-        chain: monadTestnet,
-        account: {
-          address: account,
-          signTransaction: async (tx) => tx,
-          signMessage: async (msg) => msg,
-        },
-        bundlerTransport: http(RPC_URL),
-        paymaster: { mode: PaymasterMode.SPONSORED },
-      });
-
-      const data = encodeFunctionData({
-        abi: TETRA_SCORE_ABI,
-        functionName: "saveScore",
-        args: [BigInt(scoreValue)],
-      });
-
-      const userOpHash = await smartAccount.sendUserOperation({
-        calls: [{ to: TETRA_SCORE_ADDRESS, data, value: 0n }],
-      });
-
-      console.log("✅ Score submitted:", scoreValue, "UserOp Hash:", userOpHash);
-      alert(`✅ Score ${scoreValue} saved to Monad!`);
-    } catch (err) {
-      console.error("❌ Failed to send score:", err);
-      alert("⚠️ Gagal menyimpan skor ke chain.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
+  // 🧠 Auto load High Score
   useEffect(() => {
     const saved = localStorage.getItem("tetris-high-score");
     if (saved) setHighScore(parseInt(saved, 10));
@@ -126,6 +78,54 @@ export default function TetrisBoard({ wallet }) {
     }
   }, [score, highScore]);
 
+  // 🧬 Save score to blockchain
+  async function sendScoreToChain(scoreValue) {
+    try {
+      if (!wallet) throw new Error("Wallet not connected!");
+      setSubmitting(true);
+
+      const delegation = await createMockDelegation(wallet, wallet);
+
+      const publicClient = createPublicClient({
+        chain: monadTestnet,
+        transport: http(RPC_URL),
+      })
+        .extend(pimlicoBundlerActions(RPC_URL))
+        .extend(pimlicoPaymasterActions(PAYMASTER_URL));
+
+      const smartAccount = await createSmartAccountClient({
+        chain: monadTestnet,
+        account: {
+          address: wallet,
+          signTransaction: async (tx) => tx,
+          signMessage: async (msg) => msg,
+        },
+        transport: http(RPC_URL),
+        paymaster: { mode: PaymasterMode.SPONSORED },
+        delegation,
+      });
+
+      const data = encodeFunctionData({
+        abi: TETRA_SCORE_ABI,
+        functionName: "saveScore",
+        args: [wallet, BigInt(scoreValue)],
+      });
+
+      const userOpHash = await smartAccount.sendUserOperation({
+        calls: [{ to: TETRA_SCORE_ADDRESS, data, value: 0n }],
+      });
+
+      console.log("✅ Score submitted:", scoreValue, "UserOp Hash:", userOpHash);
+      alert(`✅ Skor ${scoreValue} berhasil disimpan ke Monad Testnet!`);
+    } catch (err) {
+      console.error("❌ Gagal kirim score:", err);
+      alert("⚠️ Gagal menyimpan skor ke chain.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  // 🎮 Game Loop
   const tick = async () => {
     if (gameOver) return;
     const { x, y } = current.position;
@@ -163,7 +163,7 @@ export default function TetrisBoard({ wallet }) {
       if (checkCollision(newGrid, next, 0, startPos)) {
         setGameOver(true);
         clearInterval(intervalRef.current);
-        await sendScoreToChain(scoreRef.current); // 💾 auto save ke blockchain
+        await sendScoreToChain(scoreRef.current);
       } else {
         setCurrent({ tetromino: next, rotation: 0, position: startPos });
       }
@@ -176,12 +176,51 @@ export default function TetrisBoard({ wallet }) {
     return () => clearInterval(intervalRef.current);
   }, [current, gameOver, grid]);
 
+  // ⌨️ Control logic
+  const handleControl = (direction) => {
+    if (gameOver) return;
+    const { x, y } = current.position;
+    let rotation = current.rotation;
+    switch (direction) {
+      case "left":
+        if (!checkCollision(grid, current.tetromino, rotation, { x: x - 1, y }))
+          setCurrent((c) => ({ ...c, position: { x: x - 1, y } }));
+        break;
+      case "right":
+        if (!checkCollision(grid, current.tetromino, rotation, { x: x + 1, y }))
+          setCurrent((c) => ({ ...c, position: { x: x + 1, y } }));
+        break;
+      case "down":
+        if (!checkCollision(grid, current.tetromino, rotation, { x, y: y + 1 }))
+          setCurrent((c) => ({ ...c, position: { x, y: y + 1 } }));
+        break;
+      case "rotate":
+        const nextRotation = (rotation + 1) % current.tetromino.shape.length;
+        if (!checkCollision(grid, current.tetromino, nextRotation, { x, y }))
+          setCurrent((c) => ({ ...c, rotation: nextRotation }));
+        break;
+    }
+  };
+
   const restart = () => {
     setGrid(emptyGrid());
     setScore(0);
     scoreRef.current = 0;
     setGameOver(false);
     setCurrent({ tetromino: randomTetromino(), rotation: 0, position: { x: 3, y: 0 } });
+  };
+
+  // 🎨 UI
+  const btnStyle = {
+    backgroundColor: "#333",
+    border: "2px solid #0ff",
+    borderRadius: 6,
+    padding: "8px 12px",
+    color: "white",
+    fontWeight: "bold",
+    fontFamily: "monospace",
+    cursor: "pointer",
+    minWidth: 60,
   };
 
   const renderGrid = () => {
@@ -233,8 +272,9 @@ export default function TetrisBoard({ wallet }) {
         <div className="grid-container" style={{ width: COLS * 25 + 20, height: VISIBLE_ROWS * 25, backgroundColor: "#000", borderRadius: 10, border: "2px solid #0ff", overflow: "hidden" }}>
           {renderGrid()}
         </div>
+
         {gameOver && (
-          <button style={{ marginTop: 20, backgroundColor: "#222", border: "2px solid #ff0", color: "#ff0", borderRadius: 6, padding: "8px 12px", fontWeight: "bold" }} onClick={restart}>
+          <button style={{ ...btnStyle, marginTop: 20, backgroundColor: "#222", border: "2px solid #ff0", color: "#ff0" }} onClick={restart}>
             RESTART
           </button>
         )}
