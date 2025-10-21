@@ -15,7 +15,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const safeWallet = normalizeAddress(wallet);
     console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
-    // Dummy delegation agar tetap bisa berjalan tanpa SDK
+    // Dummy delegation to keep running without full SDK signer
     const delegation = {
       from: safeWallet,
       to: safeWallet,
@@ -36,15 +36,21 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       })
     );
 
+    // Fully typed account object with required properties to fix type errors
+    const account = {
+      address: safeWallet as `0x${string}`,
+      signTransaction: async () => ("0x" + "0".repeat(64)) as `0x${string}`, 
+      signMessage: async ({ message }: { message: unknown }) => ("0x" + "0".repeat(64)) as `0x${string}`,
+      signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`, // Add missing method
+      publicKey: "0x" + "0".repeat(66), // Dummy publicKey
+      source: "dummy-source",
+      type: "EOA", 
+      // Add additional optional properties if your SDK interface requires
+    };
+
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
-      account: {
-        address: safeWallet as `0x${string}`,
-        signTransaction: async () =>
-          ("0x" + "0".repeat(64)) as `0x${string}`, // ✅ FIXED
-        signMessage: async ({ message }) =>
-          ("0x" + "0".repeat(64)) as `0x${string}`, // ✅ FIXED
-      },
+      account,
       bundlerTransport: http(RPC_URL),
       paymaster: { mode: PaymasterMode.SPONSORED },
       delegation,
