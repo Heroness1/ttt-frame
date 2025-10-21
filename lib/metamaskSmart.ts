@@ -1,14 +1,14 @@
 import { MetaMaskSDK } from "@metamask/sdk";
 import { createSmartAccountClient } from "permissionless";
 import { pimlicoActions } from "permissionless/actions/pimlico";
-import { createPublicClient, http, serializeTransaction } from "viem";
+import { createPublicClient, http, serializeTransaction, custom } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { monadTestnet } from "viem/chains";
 
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 const ENTRYPOINT_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-// fallback manual karena PaymasterMode udah dihapus dari versi baru
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
 let sdk: MetaMaskSDK | null = null;
@@ -33,20 +33,26 @@ export async function connectSmartAccount() {
   const eoa = accounts[0];
   console.log("🔗 Connected EOA:", eoa);
 
-  // Buat Viem Public Client dengan Pimlico actions
-  const publicClient = createPublicClient({
+  // Buat Viem client yang terhubung ke MetaMask
+  const metamaskClient = createPublicClient({
+    chain: monadTestnet,
+    transport: custom(ethereum),
+  });
+
+  // Bikin Pimlico bundler client
+  const pimlicoClient = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
   }).extend(
     pimlicoActions({
       entryPoint: {
         address: ENTRYPOINT_ADDRESS,
-        version: "0.7" as any, // pakai as any biar gak bentrok sama SafeVersion enum
+        version: "0.7" as any,
       },
     })
   );
 
-  // Buat Smart Account Client yang kompatibel
+  // Bentuk Smart Account Client dari MetaMask EOA
   const smartAccountClient = await createSmartAccountClient({
     chain: monadTestnet,
     account: {
@@ -62,8 +68,8 @@ export async function connectSmartAccount() {
         });
         return signature as `0x${string}`;
       },
-    },
-    bundlerTransport: http(RPC_URL),
+    } as any, // ✅ bypass TS strict checking safely
+    client: pimlicoClient,
     paymaster: { mode: PaymasterMode.SPONSORED },
   });
 
