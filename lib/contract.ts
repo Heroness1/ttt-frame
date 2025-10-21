@@ -6,10 +6,10 @@ import { pimlicoActions } from "permissionless/actions/pimlico";
 import { toSafeSmartAccount } from "permissionless/accounts";
 import { ethers } from "ethers";
 
-// ✅ Manual enum fallback (karena PaymasterMode deprecated)
+// ✅ Enum fallback manual (biar gak error di beberapa versi permissionless)
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
-// 🧩 Environment variables
+// 🔹 Environment constants
 const CONTRACT_ADDRESS = "0xb6F7A3e43F2B22e5f73162c29a12c280A8c20db2";
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
 const OWNER_PRIVATE_KEY = process.env.OWNER_PRIVATE_KEY!;
@@ -35,7 +35,7 @@ const ABI = [
 
 // 🧠 Membuat Smart Account client yang valid
 async function getSmartAccountClient(signerPrivateKey: string) {
-  // Buat Viem client + extend dengan Pimlico bundler
+  // ✅ Buat Viem public client (read + bundler actions)
   const client = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
@@ -43,36 +43,37 @@ async function getSmartAccountClient(signerPrivateKey: string) {
     pimlicoActions({
       entryPoint: {
         address: "0x0000000000000000000000000000000000000000",
-        version: "v0.7" as any,
+        // gunakan "0.7" tanpa "v" biar tidak error type
+        version: "0.7",
       },
     })
   );
 
-  // ✅ Buat owner valid (Account Viem)
+  // ✅ Buat owner valid dari private key (account Viem)
   const signerAccount = privateKeyToAccount(signerPrivateKey as `0x${string}`);
 
-  // ✅ Buat smart account via Safe model
+  // ✅ Bentuk smart account berbasis Safe
   const smartAccount = await toSafeSmartAccount({
     client,
     owners: [signerAccount],
   });
 
-  // ✅ Create Smart Account Client ready to send userOps
-  return await createSmartAccountClient({
+  // ✅ Kembalikan smart account client (gasless ready)
+  const smartClient = await createSmartAccountClient({
     chain: monadTestnet,
     account: smartAccount,
-    client,
     transport: http(RPC_URL),
     paymaster: {
       mode: PaymasterMode.SPONSORED,
     },
   });
+
+  return smartClient;
 }
 
-// 💾 Fungsi untuk menyimpan skor (gasless)
+// 💾 Simpan skor ke blockchain (gasless)
 export async function saveScoreSmart(score: number) {
   try {
-    // Ambil private key owner dari env (bisa diganti kalau multi-user)
     const smartAccount = await getSmartAccountClient(OWNER_PRIVATE_KEY);
 
     const iface = new ethers.Interface(ABI);
@@ -84,7 +85,6 @@ export async function saveScoreSmart(score: number) {
       value: parseEther("0"),
     };
 
-    // 🔥 Kirim sebagai user operation (gasless)
     const userOpHash = await smartAccount.sendUserOperation({
       calls: [tx],
     });
@@ -97,7 +97,7 @@ export async function saveScoreSmart(score: number) {
   }
 }
 
-// 📊 Fungsi untuk membaca skor (read-only)
+// 📊 Ambil skor (read-only)
 export async function getScore(player: string) {
   const provider = new ethers.JsonRpcProvider(RPC_URL);
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
