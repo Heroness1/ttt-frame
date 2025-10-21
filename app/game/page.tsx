@@ -1,36 +1,88 @@
-import { Metadata } from "next";
-import TetrisBoard from "../../components/TetrisBoard";
+"use client";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "ttt-frame.vercel.app";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { ethers } from "ethers";
+import TetrisMonadFlash from "../../components/TetrisMonadFlash";
 
-const frame = {
-  version: "next",
-  imageUrl: `${APP_URL}/images/splash.png`, // ganti dengan image preview game kamu
-  button: {
-    title: "Play TetraMON",
-    action: {
-      type: "launch_frame",
-      name: "TetraMON Game",
-      url: `${APP_URL}/game`,
-      splashImageUrl: `${APP_URL}/images/splash.png`, // splash image saat loading frame
-      splashBackgroundColor: "#000000",
-    },
-  },
-};
+export default function GamePage() {
+  const searchParams = useSearchParams();
+  const [wallet, setWallet] = useState<string | null>(null);
+  const [score, setScore] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState("");
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "TetraMON Game",
-    openGraph: {
-      title: "TetraMON Game",
-      description: "Fast-paced Tetris with explosive combos!",
-    },
-    other: {
-      "fc:frame": JSON.stringify(frame),
-    },
-  };
-}
+  useEffect(() => {
+    (async () => {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        const address = ethers.getAddress(accounts[0]);
+        setWallet(address);
 
-export default function Page() {
-  return <TetrisBoard />;
+        const res = await fetch("/frame", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            untrustedData: { requester_wallet_address: address },
+          }),
+        });
+
+        const data = await res.json();
+        const url = new URL(data["frame:image"]);
+        const userScore = url.searchParams.get("score");
+        setScore(Number(userScore));
+        setMsg("🎮 Score synced from blockchain");
+      } catch (err) {
+        console.error("Failed to load score:", err);
+        setMsg("⚠️ Failed to fetch score");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  return (
+    <div className="text-white min-h-screen flex flex-col items-center justify-center bg-[#0a0b0d] px-4">
+      <div className="w-full max-w-xl bg-gray-900 border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
+        <header className="text-center">
+          <h1 className="text-4xl font-bold text-purple-400 neon-purple-text">
+            TetraMON Game
+          </h1>
+          <p className="text-sm text-pink-400 mt-2">On-chain Gaming</p>
+        </header>
+
+        <section className="flex justify-center">
+          <TetrisMonadFlash boxSize={14} spacing={1} />
+        </section>
+
+        {loading ? (
+          <p className="text-center text-gray-400 mt-4">Loading score...</p>
+        ) : (
+          <div className="text-center mt-4">
+            {wallet && (
+              <p className="text-green-400 text-sm mb-2">
+                ✅ Wallet: {wallet.slice(0, 6)}...{wallet.slice(-4)}
+              </p>
+            )}
+            {score !== null ? (
+              <p className="text-2xl font-bold text-cyan-300">
+                🧬 Current Score: {score}
+              </p>
+            ) : (
+              <p className="text-red-400 text-sm">No score found</p>
+            )}
+          </div>
+        )}
+
+        {msg && (
+          <p className="text-center text-sm text-gray-400 mt-3">{msg}</p>
+        )}
+
+        <footer className="text-center text-xs text-gray-600 pt-4 border-t border-gray-700">
+          Powered by Monad • Gasless via Pimlico
+        </footer>
+      </div>
+    </div>
+  );
 }
