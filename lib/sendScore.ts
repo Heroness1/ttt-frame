@@ -38,7 +38,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
       account: {
-        address: safeWallet,
+        address: safeWallet as `0x${string}`,
         signTransaction: async (tx) => tx,
         signMessage: async (msg) => msg,
       },
