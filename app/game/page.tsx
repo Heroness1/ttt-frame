@@ -12,10 +12,14 @@ function GameContent() {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
 
+  // ✅ Connect wallet + fetch score (READ only)
   useEffect(() => {
     (async () => {
       try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        const ethereum = (window as any).ethereum;
+        if (!ethereum) throw new Error("MetaMask not found");
+
+        const provider = new ethers.BrowserProvider(ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
         const address = ethers.getAddress(accounts[0]);
         setWallet(address);
@@ -41,6 +45,33 @@ function GameContent() {
       }
     })();
   }, []);
+
+  // ✅ Manual save score ke chain
+  async function saveScore() {
+    if (!wallet) return setMsg("⚠️ Wallet not connected");
+
+    try {
+      setMsg("⏳ Saving score...");
+      // nanti lo bisa dapet real score dari game
+      const finalScore = Math.floor(Math.random() * 500); // dummy sementara
+      const res = await fetch("/api/save-score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet, score: finalScore }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMsg(`✅ Score ${finalScore} saved to chain!`);
+        setScore(finalScore);
+      } else {
+        throw new Error(data.error || "Failed to save score");
+      }
+    } catch (err) {
+      console.error("❌ Save failed:", err);
+      setMsg("❌ Failed to save score");
+    }
+  }
 
   return (
     <div className="text-white min-h-screen flex flex-col items-center justify-center bg-[#0a0b0d] px-4">
@@ -74,6 +105,21 @@ function GameContent() {
             )}
           </div>
         )}
+
+        {/* 🔘 Save Score button */}
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={saveScore}
+            disabled={loading || !wallet}
+            className={`px-6 py-2 rounded-xl font-semibold transition ${
+              loading || !wallet
+                ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+            }`}
+          >
+            Save Score
+          </button>
+        </div>
 
         {msg && <p className="text-center text-sm text-gray-400 mt-3">{msg}</p>}
 
