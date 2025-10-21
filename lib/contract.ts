@@ -28,7 +28,6 @@ const ABI = [
 ];
 
 async function getSmartAccountClient(privateKey: string) {
-  // Create the base public client with chain and RPC transport
   const baseClient = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
@@ -36,25 +35,23 @@ async function getSmartAccountClient(privateKey: string) {
     pimlicoActions({
       entryPoint: {
         address: "0x0000000000000000000000000000000000000000",
-        version: "0.7" as any, // type assertion to match SafeVersion
+        version: "0.7" as any, // type assertion to fix SafeVersion type
       },
     })
   );
 
   const signerAccount = privateKeyToAccount(privateKey as `0x${string}`);
 
-  // Create a Safe smart account with the baseClient and signer
   const smartAccount = await toSafeSmartAccount({
     client: baseClient,
     owners: [signerAccount],
     version: "0.7" as any,
   });
 
-  // Create SmartAccountClient with bundlerTransport instead of transport
   const client = createSmartAccountClient({
     account: smartAccount,
     chain: monadTestnet,
-    bundlerTransport: http(RPC_URL), // Correct property for transport
+    bundlerTransport: http(RPC_URL),
     paymaster: {
       getPaymasterData: async () => ({
         paymaster: "0x0000000000000000000000000000000000000000",
@@ -71,13 +68,16 @@ export async function saveScoreSmart(userPrivateKey: string, score: number) {
   const iface = new ethers.Interface(ABI);
   const data = iface.encodeFunctionData("saveScore", [score]);
 
-  const tx = {
+  // The call must include 'abi' and 'functionName' keys per type requirement
+  const call = {
     to: CONTRACT_ADDRESS as `0x${string}`,
-    data,
-    value: parseEther("0"),
+    abi: ABI,
+    functionName: "saveScore",
+    args: [score],
+    value: 0n,
   };
 
-  const userOp = await client.sendUserOperation({ calls: [tx] });
+  const userOp = await client.sendUserOperation({ calls: [call] });
   console.log("🚀 UserOp sent:", userOp);
   return userOp;
 }
