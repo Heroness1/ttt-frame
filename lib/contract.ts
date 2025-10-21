@@ -56,6 +56,7 @@ async function getSmartAccountClient(signerPrivateKey: string) {
   const smartAccount = await toSafeSmartAccount({
     client,
     owners: [signerAccount],
+    version: "0.7",
   });
 
   // ✅ Kembalikan smart account client (gasless ready)
