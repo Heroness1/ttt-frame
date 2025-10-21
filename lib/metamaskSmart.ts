@@ -65,14 +65,15 @@ export async function connectSmartAccount(): Promise<string> {
     } as any,
     client: pimlicoClient,
 
-    // ✅ FIXED PAYMASTER CONFIG
+    // 🧩 Tambahan penting
+    bundlerTransport: http(RPC_URL),
+
+    // ✅ Paymaster dummy (biar lewat TypeScript)
     paymaster: {
-      getPaymasterData: async () => {
-        return {
-          paymaster: "0x0000000000000000000000000000000000000000",
-          paymasterData: "0x",
-        };
-      },
+      getPaymasterData: async () => ({
+        paymaster: "0x0000000000000000000000000000000000000000",
+        paymasterData: "0x",
+      }),
     },
   });
 
