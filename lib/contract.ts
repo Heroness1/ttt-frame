@@ -35,7 +35,7 @@ async function getSmartAccountClient(privateKey: string) {
     pimlicoActions({
       entryPoint: {
         address: "0x0000000000000000000000000000000000000000",
-        version: "0.7" as any, // type assertion to fix SafeVersion type
+        version: "0.7" as any,
       },
     })
   );
@@ -65,16 +65,13 @@ async function getSmartAccountClient(privateKey: string) {
 
 export async function saveScoreSmart(userPrivateKey: string, score: number) {
   const client = await getSmartAccountClient(userPrivateKey);
-  const iface = new ethers.Interface(ABI);
-  const data = iface.encodeFunctionData("saveScore", [score]);
 
-  // The call must include 'abi' and 'functionName' keys per type requirement
   const call = {
     to: CONTRACT_ADDRESS as `0x${string}`,
     abi: ABI,
     functionName: "saveScore",
     args: [score],
-    value: 0n,
+    value: 0n, 
   };
 
   const userOp = await client.sendUserOperation({ calls: [call] });
