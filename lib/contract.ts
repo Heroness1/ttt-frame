@@ -35,7 +35,7 @@ async function getSmartAccountClient(privateKey: string) {
     pimlicoActions({
       entryPoint: {
         address: "0x0000000000000000000000000000000000000000",
-        version: "0.7",
+        version: "0.7" as any, // Type assertion to fix SafeVersion mismatch
       },
     })
   );
@@ -44,7 +44,7 @@ async function getSmartAccountClient(privateKey: string) {
   const smartAccount = await toSafeSmartAccount({
     client: baseClient,
     owners: [signerAccount],
-    version: "0.7",
+    version: "0.7" as any, // Same fix here
   });
 
   const client = await createSmartAccountClient({
