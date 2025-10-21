@@ -3,10 +3,11 @@ import { privateKeyToAccount } from "viem/accounts";
 import { monadTestnet } from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
 import { pimlicoActions } from "permissionless/actions/pimlico";
-import { toSafeSmartAccount, SafeVersion } from "permissionless/accounts";
+import { toSafeSmartAccount } from "permissionless/accounts";
 import { ethers } from "ethers";
 
 const PaymasterMode = { SPONSORED: "SPONSORED" };
+type SafeVersion = "0.7";
 
 const CONTRACT_ADDRESS = "0xb6F7A3e43F2B22e5f73162c29a12c280A8c20db2";
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
@@ -44,7 +45,7 @@ async function getSmartAccountClient(privateKey: string) {
   const smartAccount = await toSafeSmartAccount({
     client,
     owners: [signerAccount],
-    version: SafeVersion.V070,
+    version: "0.7" as SafeVersion,
   });
 
   return await createSmartAccountClient({
