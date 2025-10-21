@@ -1,13 +1,13 @@
 import { MetaMaskSDK } from "@metamask/sdk";
 import { createSmartAccountClient } from "permissionless";
-import { pimlicoActions } from "permissionless/actions/pimlico"; // ✅ baru
+import { pimlicoActions } from "permissionless/actions/pimlico";
 import { createPublicClient, http } from "viem";
 import { monadTestnet } from "viem/chains";
 
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 
-// fallback manual karena PaymasterMode udah dihapus
+// fallback manual because PaymasterMode removed
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
 let sdk: MetaMaskSDK | null = null;
@@ -32,13 +32,20 @@ export async function connectSmartAccount() {
   const eoa = accounts[0];
   console.log("🔗 Connected EOA:", eoa);
 
-  // ✅ Public client pake pimlicoActions
+  // Correct usage: Pass Pimlico config object to pimlicoActions
   const publicClient = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
-  }).extend(pimlicoActions(RPC_URL));
+  }).extend(
+    pimlicoActions({
+      entryPoint: {
+        address: "0x0000000000000000000000000000000000000000", // Replace with real EntryPoint address
+        version: "0.7" as any,
+      },
+    })
+  );
 
-  // ✅ Smart account setup
+  // Create the smart account client with bundlerTransport
   const smartAccountClient = await createSmartAccountClient({
     chain: monadTestnet,
     account: {
@@ -46,7 +53,7 @@ export async function connectSmartAccount() {
       signTransaction: async (tx) => tx,
       signMessage: async (msg) => msg,
     },
-    transport: http(RPC_URL),
+    bundlerTransport: http(RPC_URL),
     paymaster: { mode: PaymasterMode.SPONSORED },
   });
 
