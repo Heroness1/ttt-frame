@@ -59,7 +59,6 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
           paymasterAndData: "0x",
         }),
       },
-      delegation,
     });
 
     // 4️⃣ Encode dan kirim
