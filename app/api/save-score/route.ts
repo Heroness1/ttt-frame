@@ -13,8 +13,13 @@ export async function POST(req: Request) {
 
     console.log(`🎮 Saving score for ${wallet}: ${score}`);
 
-    // Simpan skor ke smart contract (via Pimlico)
-    const tx = await saveScoreSmart(score);
+    const privateKey = process.env.OWNER_PRIVATE_KEY!;
+    if (!privateKey) {
+      throw new Error("Missing OWNER_PRIVATE_KEY in environment variables");
+    }
+
+    // ✅ Simpan skor ke smart contract
+    const tx = await saveScoreSmart(privateKey, score);
 
     return new Response(
       JSON.stringify({
