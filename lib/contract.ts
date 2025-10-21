@@ -11,6 +11,7 @@ const CONTRACT_ADDRESS = "0xb6F7A3e43F2B22e5f73162c29a12c280A8c20db2";
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 
+// ABI kontrak
 const ABI = [
   {
     inputs: [{ internalType: "uint256", name: "score", type: "uint256" }],
@@ -33,7 +34,14 @@ async function getSmartAccountClient(signerAddress: string) {
   const client = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
-  }).extend(pimlicoActions(RPC_URL)); // ✅ cuma ini aja sekarang
+  }).extend(
+    pimlicoActions({
+      entryPoint: {
+        address: "0x0000000000000000000000000000000000000000", // dummy safe address
+        version: "v0.7", // ✅ EntryPoint versi baru
+      },
+    })
+  );
 
   return await createSmartAccountClient({
     chain: monadTestnet,
@@ -44,7 +52,7 @@ async function getSmartAccountClient(signerAddress: string) {
     },
     transport: http(RPC_URL),
     paymaster: {
-      mode: PaymasterMode.SPONSORED, // ✅ tetap dipakai manual
+      mode: PaymasterMode.SPONSORED, // ✅ tetap gasless
     },
   });
 }
