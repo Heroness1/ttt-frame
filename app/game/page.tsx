@@ -5,6 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { ethers } from "ethers";
 import TetrisMonadFlash from "../../components/TetrisMonadFlash";
 
+// 🔹 tambahin ini paling atas biar TypeScript gak error
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 export default function GamePage() {
   const searchParams = useSearchParams();
   const [wallet, setWallet] = useState<string | null>(null);
@@ -15,7 +22,8 @@ export default function GamePage() {
   useEffect(() => {
     (async () => {
       try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        // ✅ tambahin tanda seru biar compiler yakin window.ethereum ada
+        const provider = new ethers.BrowserProvider(window.ethereum!);
         const accounts = await provider.send("eth_requestAccounts", []);
         const address = ethers.getAddress(accounts[0]);
         setWallet(address);
