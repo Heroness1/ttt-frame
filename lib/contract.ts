@@ -1,10 +1,11 @@
-import { createPublicClient, http, parseEther, privateKeyToAccount } from "viem"; // ✅ tambahkan ini
+import { createPublicClient, http, parseEther } from "viem";
 import { monadTestnet } from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
 import { pimlicoActions } from "permissionless/actions/pimlico";
 import { toSafeSmartAccount } from "permissionless/accounts";
 import { ethers } from "ethers";
 
+// ✅ manual fallback for mode
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
 const CONTRACT_ADDRESS = "0xb6F7A3e43F2B22e5f73162c29a12c280A8c20db2";
@@ -28,7 +29,7 @@ const ABI = [
   },
 ];
 
-// 🧠 Smart Account client
+// 🧠 Smart Account client (via Pimlico)
 async function getSmartAccountClient(signerAddress: string) {
   const client = createPublicClient({
     chain: monadTestnet,
@@ -42,14 +43,17 @@ async function getSmartAccountClient(signerAddress: string) {
     })
   );
 
-  // ✅ buat dummy RegularOwner biar sesuai tipe
-  const dummyOwner = privateKeyToAccount(
-    "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-  );
+  // ✅ Manual RegularOwner (bypass privateKeyToAccount)
+  const dummyOwner = {
+    address: signerAddress as `0x${string}`,
+    type: "json-rpc",
+    source: "manual",
+    sign: async () => "0x" as `0x${string}`,
+  };
 
   const smartAccount = await toSafeSmartAccount({
     client,
-    owners: [dummyOwner], // ✅ FIXED: object, bukan string
+    owners: [dummyOwner],
   });
 
   return await createSmartAccountClient({
@@ -63,10 +67,11 @@ async function getSmartAccountClient(signerAddress: string) {
   });
 }
 
-// 💾 Save score ke chain (gasless)
+// 💾 Save score ke blockchain (gasless)
 export async function saveScoreSmart(signerAddress: string, score: number) {
   try {
     const smartAccount = await getSmartAccountClient(signerAddress);
+
     const iface = new ethers.Interface(ABI);
     const data = iface.encodeFunctionData("saveScore", [score]);
 
@@ -88,7 +93,7 @@ export async function saveScoreSmart(signerAddress: string, score: number) {
   }
 }
 
-// 📊 Fetch score
+// 📊 Fetch score (read-only)
 export async function getScore(player: string) {
   const provider = new ethers.JsonRpcProvider(RPC_URL);
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
