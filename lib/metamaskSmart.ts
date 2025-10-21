@@ -32,30 +32,36 @@ export async function connectSmartAccount() {
   const eoa = accounts[0];
   console.log("🔗 Connected EOA:", eoa);
 
-  // Correct usage: Pass Pimlico config object to pimlicoActions
+  // Create publicClient with proper pimlicoActions config object
   const publicClient = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
   }).extend(
     pimlicoActions({
       entryPoint: {
-        address: "0x0000000000000000000000000000000000000000", // Replace with actual EntryPoint address
+        address: "0x0000000000000000000000000000000000000000", // Replace with actual entry point address
         version: "0.7" as any,
       },
     })
   );
 
-  // Create the smart account client with bundlerTransport
+  // Create smart account client passing serialization for transactions and proper signMessage
   const smartAccountClient = await createSmartAccountClient({
     chain: monadTestnet,
     account: {
       address: eoa as `0x${string}`,
-      // signTransaction must return serialized transaction hex string
       signTransaction: async (tx) => {
         const serialized = serializeTransaction(tx);
-        return serialized;
+        return serialized; // Returns hex string serialized transaction
       },
-      signMessage: async (msg) => msg,
+      signMessage: async (message) => {
+        // Use MetaMask provider personal_sign method to sign message
+        const signature = await ethereum.request({
+          method: "personal_sign",
+          params: [message, eoa],
+        });
+        return signature as string; // Hex signature string starting with 0x
+      },
     },
     bundlerTransport: http(RPC_URL),
     paymaster: { mode: PaymasterMode.SPONSORED },
