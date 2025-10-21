@@ -5,7 +5,6 @@ import {
   createPublicClient,
   http,
   serializeTransaction,
-  custom,
   type TransactionSerializable,
 } from "viem";
 import { monadTestnet } from "viem/chains";
@@ -14,11 +13,9 @@ const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 const ENTRYPOINT_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-const PaymasterMode = { SPONSORED: "SPONSORED" };
-
 let sdk: MetaMaskSDK | null = null;
 
-export async function connectSmartAccount() {
+export async function connectSmartAccount(): Promise<string> {
   if (!sdk) {
     sdk = new MetaMaskSDK({
       dappMetadata: {
@@ -28,7 +25,7 @@ export async function connectSmartAccount() {
     });
   }
 
-  const ethereum = sdk.getProvider();
+  const ethereum = sdk.getProvider() as any;
   if (!ethereum) throw new Error("MetaMask not available");
 
   const accounts = (await ethereum.request({
@@ -54,20 +51,29 @@ export async function connectSmartAccount() {
     chain: monadTestnet,
     account: {
       address: eoa as `0x${string}`,
-      signTransaction: async (tx: TransactionSerializable) => {
+      signTransaction: async (tx: TransactionSerializable): Promise<`0x${string}`> => {
         const serialized = serializeTransaction(tx);
         return serialized as `0x${string}`;
       },
-      signMessage: async ({ message }: { message: string }) => {
+      signMessage: async (params: { message: string }): Promise<`0x${string}`> => {
         const signature = await ethereum.request({
           method: "personal_sign",
-          params: [message, eoa],
+          params: [params.message, eoa],
         });
         return signature as `0x${string}`;
       },
     } as any,
     client: pimlicoClient,
-    paymaster: { mode: PaymasterMode.SPONSORED },
+
+    // ✅ FIXED PAYMASTER CONFIG
+    paymaster: {
+      getPaymasterData: async () => {
+        return {
+          paymaster: "0x0000000000000000000000000000000000000000",
+          paymasterData: "0x",
+        };
+      },
+    },
   });
 
   console.log("🧠 Smart Account ready:", smartAccountClient);
