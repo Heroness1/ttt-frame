@@ -3,152 +3,56 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ROWS, COLS, VISIBLE_ROWS, emptyGrid, checkCollision, placeTetromino, clearRows } from "./gridUtils";
 import { runExplosions } from "./explosionUtils";
+import { ethers } from "ethers";
+import { TETRA_SCORE_ADDRESS, TETRA_SCORE_ABI } from "../lib/tetrascore";
 import "./explode.css";
+import { connectSmartAccount } from "../lib/metamaskSmart";
+
 
 const TETROMINOS = {
-  I: {
-    shape: [
-      [
-        [0, 0, 0, 0],
-        [1, 1, 1, 1],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-      ],
-      [
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-      ],
-    ],
-    color: "cyan",
-  },
-  O: { shape: [[[1, 1], [1, 1]]], color: "yellow" },
-  T: {
-    shape: [
-      [
-        [0, 1, 0],
-        [1, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 1],
-        [0, 1, 0],
-      ],
-      [
-        [0, 0, 0],
-        [1, 1, 1],
-        [0, 1, 0],
-      ],
-      [
-        [0, 1, 0],
-        [1, 1, 0],
-        [0, 1, 0],
-      ],
-    ],
-    color: "purple",
-  },
-  S: {
-    shape: [
-      [
-        [0, 1, 1],
-        [1, 1, 0],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 1],
-        [0, 0, 1],
-      ],
-    ],
-    color: "green",
-  },
-  Z: {
-    shape: [
-      [
-        [1, 1, 0],
-        [0, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 0, 1],
-        [0, 1, 1],
-        [0, 1, 0],
-      ],
-    ],
-    color: "red",
-  },
-  J: {
-    shape: [
-      [
-        [1, 0, 0],
-        [1, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 1],
-        [0, 1, 0],
-        [0, 1, 0],
-      ],
-      [
-        [0, 0, 0],
-        [1, 1, 1],
-        [0, 0, 1],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 0],
-        [1, 1, 0],
-      ],
-    ],
-    color: "blue",
-  },
-  L: {
-    shape: [
-      [
-        [0, 0, 1],
-        [1, 1, 1],
-        [0, 0, 0],
-      ],
-      [
-        [0, 1, 0],
-        [0, 1, 0],
-        [0, 1, 1],
-      ],
-      [
-        [0, 0, 0],
-        [1, 1, 1],
-        [1, 0, 0],
-      ],
-      [
-        [1, 1, 0],
-        [0, 1, 0],
-        [0, 1, 0],
-      ],
-    ],
-    color: "orange",
-  },
+  I: { shape: [[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],[[0,0,1,0],[0,0,1,0],[0,0,1,0],[0,0,1,0]]], color: "cyan" },
+  O: { shape: [[[1,1],[1,1]]], color: "yellow" },
+  T: { shape: [[[0,1,0],[1,1,1],[0,0,0]],[[0,1,0],[0,1,1],[0,1,0]],[[0,0,0],[1,1,1],[0,1,0]],[[0,1,0],[1,1,0],[0,1,0]]], color: "purple" },
+  S: { shape: [[[0,1,1],[1,1,0],[0,0,0]],[[0,1,0],[0,1,1],[0,0,1]]], color: "green" },
+  Z: { shape: [[[1,1,0],[0,1,1],[0,0,0]],[[0,0,1],[0,1,1],[0,1,0]]], color: "red" },
+  J: { shape: [[[1,0,0],[1,1,1],[0,0,0]],[[0,1,1],[0,1,0],[0,1,0]],[[0,0,0],[1,1,1],[0,0,1]],[[0,1,0],[0,1,0],[1,1,0]]], color: "blue" },
+  L: { shape: [[[0,0,1],[1,1,1],[0,0,0]],[[0,1,0],[0,1,0],[0,1,1]],[[0,0,0],[1,1,1],[1,0,0]],[[1,1,0],[0,1,0],[0,1,0]]], color: "orange" },
 };
 
 const randomTetromino = () => {
   const keys = Object.keys(TETROMINOS);
-  const rand = keys[Math.floor(Math.random() * keys.length)];
-  return { ...TETROMINOS[rand], name: rand };
+  return { ...TETROMINOS[keys[Math.floor(Math.random() * keys.length)]], name: keys[Math.floor(Math.random() * keys.length)] };
 };
 
 export default function TetrisBoard() {
   const [grid, setGrid] = useState(emptyGrid());
-  const [current, setCurrent] = useState({
-    tetromino: randomTetromino(),
-    rotation: 0,
-    position: { x: 3, y: 0 },
-  });
+  const [current, setCurrent] = useState({ tetromino: randomTetromino(), rotation: 0, position: { x: 3, y: 0 } });
   const [score, setScore] = useState(0);
-  const scoreRef = useRef(score);
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const scoreRef = useRef(score);
   const intervalRef = useRef(null);
+
+  // 🚀 Simpan skor ke kontrak Monad
+  const sendScoreToChain = async (scoreValue) => {
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not found");
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(TETRA_SCORE_ADDRESS, TETRA_SCORE_ABI, signer);
+
+      setSubmitting(true);
+      const tx = await contract.saveScore(scoreValue);
+      console.log("⏳ Sending score:", scoreValue);
+      await tx.wait();
+      alert(`✅ Score ${scoreValue} saved on Monad!`);
+      setSubmitting(false);
+    } catch (err) {
+      console.error("❌ Failed to send score:", err);
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("tetris-high-score");
@@ -162,7 +66,8 @@ export default function TetrisBoard() {
     }
   }, [score, highScore]);
 
-  const tick = () => {
+  // ⏱️ Main loop
+  const tick = async () => {
     if (gameOver) return;
     const { x, y } = current.position;
     if (!checkCollision(grid, current.tetromino, current.rotation, { x, y: y + 1 })) {
@@ -193,9 +98,12 @@ export default function TetrisBoard() {
 
       const next = randomTetromino();
       const startPos = { x: Math.floor(COLS / 2) - 2, y: ROWS - VISIBLE_ROWS - 2 };
+
+      // 💥 Game Over
       if (checkCollision(newGrid, next, 0, startPos)) {
         setGameOver(true);
         clearInterval(intervalRef.current);
+        await sendScoreToChain(scoreRef.current); // ⬅️ kirim score ke Monad
       } else {
         setCurrent({ tetromino: next, rotation: 0, position: startPos });
       }
@@ -208,6 +116,7 @@ export default function TetrisBoard() {
     return () => clearInterval(intervalRef.current);
   }, [current, gameOver, grid]);
 
+  // 🎮 Controls
   const handleControl = (direction) => {
     if (gameOver) return;
     const { x, y } = current.position;
@@ -239,18 +148,7 @@ export default function TetrisBoard() {
     setCurrent({ tetromino: randomTetromino(), rotation: 0, position: { x: 3, y: 0 } });
   };
 
-  const btnStyle = {
-    backgroundColor: "#333",
-    border: "2px solid #0ff",
-    borderRadius: 6,
-    padding: "8px 12px",
-    color: "white",
-    fontWeight: "bold",
-    fontFamily: "monospace",
-    cursor: "pointer",
-    minWidth: 60,
-  };
-
+  // 🎨 Render Grid
   const renderGrid = () => {
     const visibleGrid = grid.slice(ROWS - VISIBLE_ROWS);
     const display = visibleGrid.map(row => [...row]);
@@ -287,11 +185,25 @@ export default function TetrisBoard() {
     ));
   };
 
+  // 🧱 UI
+  const btnStyle = {
+    backgroundColor: "#333",
+    border: "2px solid #0ff",
+    borderRadius: 6,
+    padding: "8px 12px",
+    color: "white",
+    fontWeight: "bold",
+    fontFamily: "monospace",
+    cursor: "pointer",
+    minWidth: 60,
+  };
+
   return (
     <div style={{ backgroundColor: "#000", minHeight: "100vh", padding: 20, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "monospace" }}>
       <div style={{ backgroundColor: "#111", border: "4px solid #0ff", borderRadius: 20, padding: 20, boxShadow: "0 0 30px #0ff", display: "inline-block" }}>
         <h2 style={{ color: "white", marginBottom: 5, textAlign: "center" }}>{gameOver ? "GAME OVER" : `Score: ${score}`}</h2>
         <h3 style={{ color: "#0ff", marginBottom: 10, textAlign: "center" }}>High Score: {highScore}</h3>
+        {submitting && <p style={{ color: "#0f0", textAlign: "center" }}>Submitting score to Monad...</p>}
 
         <div className="grid-container" style={{ width: COLS * 25 + 20, height: VISIBLE_ROWS * 25, backgroundColor: "#000", borderRadius: 10, border: "2px solid #0ff", overflow: "hidden" }}>
           {renderGrid()}
@@ -307,11 +219,6 @@ export default function TetrisBoard() {
         {gameOver && (
           <>
             <button style={{ ...btnStyle, marginTop: 20, backgroundColor: "#222", border: "2px solid #ff0", color: "#ff0" }} onClick={restart}>RESTART</button>
-            <a href={`https://warpcast.com/~/compose?text=🎮 Skor gue di Tetris: ${score} pts! Coba ngalahin di sini: https://tetris-frame.vercel.app`} target="_blank" rel="noopener noreferrer">
-              <button style={{ ...btnStyle, marginTop: 10, backgroundColor: "#2b2", border: "2px solid #fff", color: "#fff" }}>
-                Share ke Warpcast
-              </button>
-            </a>
           </>
         )}
       </div>
