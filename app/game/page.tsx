@@ -1,17 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ethers } from "ethers";
 import TetrisMonadFlash from "../../components/TetrisMonadFlash";
 
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
-}
-
-export default function GamePage() {
+function GameContent() {
   const searchParams = useSearchParams();
   const [wallet, setWallet] = useState<string | null>(null);
   const [score, setScore] = useState<number | null>(null);
@@ -21,7 +15,7 @@ export default function GamePage() {
   useEffect(() => {
     (async () => {
       try {
-        const provider = new ethers.BrowserProvider(window.ethereum!);
+        const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
         const address = ethers.getAddress(accounts[0]);
         setWallet(address);
@@ -81,14 +75,20 @@ export default function GamePage() {
           </div>
         )}
 
-        {msg && (
-          <p className="text-center text-sm text-gray-400 mt-3">{msg}</p>
-        )}
+        {msg && <p className="text-center text-sm text-gray-400 mt-3">{msg}</p>}
 
         <footer className="text-center text-xs text-gray-600 pt-4 border-t border-gray-700">
           Powered by Monad • Gasless via Pimlico
         </footer>
       </div>
     </div>
+  );
+}
+
+export default function GamePage() {
+  return (
+    <Suspense fallback={<div className="text-center text-gray-400 mt-10">Loading...</div>}>
+      <GameContent />
+    </Suspense>
   );
 }
