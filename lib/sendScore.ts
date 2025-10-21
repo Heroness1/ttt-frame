@@ -15,6 +15,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const safeWallet = normalizeAddress(wallet);
     console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
+    // dummy delegation agar bisa jalan tanpa SDK Pimlico
     const delegation = {
       from: safeWallet,
       to: safeWallet,
@@ -38,9 +39,9 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
       account: {
-        address: safeWallet as `0x${string}`, // ✅ FIXED HERE
-        signTransaction: async (tx) => tx,
-        signMessage: async (msg) => msg,
+        address: safeWallet as `0x${string}`,
+        signTransaction: async () => "0x" + "0".repeat(64), // ✅ FIX: return dummy hash
+        signMessage: async () => "0x" + "0".repeat(64), // ✅ juga dummy
       },
       bundlerTransport: http(RPC_URL),
       paymaster: { mode: PaymasterMode.SPONSORED },
@@ -50,7 +51,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const data = encodeFunctionData({
       abi: TETRA_SCORE_ABI,
       functionName: "saveScore",
-      args: [safeWallet as `0x${string}`, BigInt(scoreValue)], // ✅ optional safe cast
+      args: [safeWallet as `0x${string}`, BigInt(scoreValue)],
     });
 
     const userOpHash = await smartAccount.sendUserOperation({
