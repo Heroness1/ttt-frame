@@ -20,3 +20,14 @@ With **Account Abstraction** enabled by Pimlico’s Smart Accounts and Paymaster
 ---
 
 ## 🧠 Architecture & Tech Stack
+Frontend (Next.js + React + Tailwind CSS) ↓ Smart Account Mode (Pimlico / Permissionless SDK)
+or
+Fallback EOA Mode (Viem Wallet Client + direct transaction) ↓ Monad Testnet (Smart Contract TETRA_SCORE)
+
+**Tech Stack:**  
+- Next.js 14 (App Router)  
+- React, Tailwind CSS  
+- Viem + Permissionless SDK  
+- Pimlico Smart Account integration  
+- Solidity smart contract (Monad Testnet)  
+- GitHub + Vercel for deployment
