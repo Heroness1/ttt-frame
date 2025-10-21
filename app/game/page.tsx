@@ -1,96 +1,87 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { createPublicClient, http, parseEther } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { monadTestnet } from "viem/chains";
+import { createSmartAccountClient } from "permissionless";
+import { pimlicoActions } from "permissionless/actions/pimlico";
+import { toSafeSmartAccount } from "permissionless/accounts";
 import { ethers } from "ethers";
-import TetrisMonadFlash from "../../components/TetrisMonadFlash";
 
-// 🔹 tambahin ini paling atas biar TypeScript gak error
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
+const CONTRACT_ADDRESS = "0xb6F7A3e43F2B22e5f73162c29a12c280A8c20db2";
+const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
+const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
+
+const ABI = [
+  {
+    inputs: [{ internalType: "uint256", name: "score", type: "uint256" }],
+    name: "saveScore",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "player", type: "address" }],
+    name: "getScore",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+];
+
+async function getSmartAccountClient(privateKey: string) {
+  const baseClient = createPublicClient({
+    chain: monadTestnet,
+    transport: http(RPC_URL),
+  }).extend(
+    pimlicoActions({
+      entryPoint: {
+        address: "0x0000000000000000000000000000000000000000",
+        version: "0.7" as any,
+      },
+    })
+  );
+
+  const signerAccount = privateKeyToAccount(privateKey as `0x${string}`);
+  const smartAccount = await toSafeSmartAccount({
+    client: baseClient,
+    owners: [signerAccount],
+    version: "0.7" as any,
+  });
+
+  const client = await createSmartAccountClient({
+    account: smartAccount,
+    chain: monadTestnet,
+    transport: http(RPC_URL),
+    paymaster: {
+      getPaymasterData: async () => ({
+        paymaster: "0x0000000000000000000000000000000000000000",
+        paymasterData: "0x",
+      }),
+    },
+  });
+
+  return client;
 }
 
-export default function GamePage() {
-  const searchParams = useSearchParams();
-  const [wallet, setWallet] = useState<string | null>(null);
-  const [score, setScore] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState("");
+export async function saveScoreSmart(userPrivateKey: string, score: number) {
+  const client = await getSmartAccountClient(userPrivateKey);
+  const iface = new ethers.Interface(ABI);
+  const data = iface.encodeFunctionData("saveScore", [score]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        // ✅ tambahin tanda seru biar compiler yakin window.ethereum ada
-        const provider = new ethers.BrowserProvider(window.ethereum!);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        const address = ethers.getAddress(accounts[0]);
-        setWallet(address);
+  const tx = {
+    to: CONTRACT_ADDRESS as `0x${string}`,
+    data,
+    value: parseEther("0"),
+  };
 
-        const res = await fetch("/frame", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            untrustedData: { requester_wallet_address: address },
-          }),
-        });
+  const userOp = await client.sendUserOperation({ calls: [tx] });
+  console.log("🚀 UserOp sent:", userOp);
+  return userOp;
+}
 
-        const data = await res.json();
-        const url = new URL(data["frame:image"]);
-        const userScore = url.searchParams.get("score");
-        setScore(Number(userScore));
-        setMsg("🎮 Score synced from blockchain");
-      } catch (err) {
-        console.error("Failed to load score:", err);
-        setMsg("⚠️ Failed to fetch score");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  return (
-    <div className="text-white min-h-screen flex flex-col items-center justify-center bg-[#0a0b0d] px-4">
-      <div className="w-full max-w-xl bg-gray-900 border border-cyan-500 rounded-2xl shadow-lg p-6 space-y-6">
-        <header className="text-center">
-          <h1 className="text-4xl font-bold text-purple-400 neon-purple-text">
-            TetraMON Game
-          </h1>
-          <p className="text-sm text-pink-400 mt-2">On-chain Gaming</p>
-        </header>
-
-        <section className="flex justify-center">
-          <TetrisMonadFlash boxSize={14} spacing={1} />
-        </section>
-
-        {loading ? (
-          <p className="text-center text-gray-400 mt-4">Loading score...</p>
-        ) : (
-          <div className="text-center mt-4">
-            {wallet && (
-              <p className="text-green-400 text-sm mb-2">
-                ✅ Wallet: {wallet.slice(0, 6)}...{wallet.slice(-4)}
-              </p>
-            )}
-            {score !== null ? (
-              <p className="text-2xl font-bold text-cyan-300">
-                🧬 Current Score: {score}
-              </p>
-            ) : (
-              <p className="text-red-400 text-sm">No score found</p>
-            )}
-          </div>
-        )}
-
-        {msg && (
-          <p className="text-center text-sm text-gray-400 mt-3">{msg}</p>
-        )}
-
-        <footer className="text-center text-xs text-gray-600 pt-4 border-t border-gray-700">
-          Powered by Monad • Gasless via Pimlico
-        </footer>
-      </div>
-    </div>
-  );
+export async function getScore(player: string) {
+  const provider = new ethers.JsonRpcProvider(RPC_URL);
+  const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+  const score = await contract.getScore(player);
+  console.log("🎮 Score fetched:", Number(score));
+  return Number(score);
 }
