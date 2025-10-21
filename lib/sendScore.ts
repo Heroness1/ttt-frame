@@ -5,6 +5,7 @@ import { monadTestnet } from "viem/chains";
 import { type LocalAccount } from "viem/accounts";
 import { TETRA_SCORE_ABI, TETRA_SCORE_ADDRESS } from "./tetrascore";
 import { normalizeAddress } from "./utils";
+import { initDelegationForPlayer } from "./delegation"; // 🧠 NEW — real Delegation SDK integration
 
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
@@ -15,16 +16,11 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const safeWallet = normalizeAddress(wallet);
     console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
-    // Dummy delegation
-    const delegation = {
-      from: safeWallet,
-      to: safeWallet,
-      validity: "7d",
-      signature: "0x" + "f".repeat(130),
-      timestamp: Date.now(),
-    };
+    // 🧩 1️⃣ Create a real delegation instance (via MetaMask Delegation Toolkit)
+    const delegation = await initDelegationForPlayer(safeWallet);
+    console.log("✅ Delegation created:", delegation);
 
-    // 1️⃣ Client
+    // 🧩 2️⃣ Client
     const publicClient = createPublicClient({
       chain: monadTestnet,
       transport: http(RPC_URL),
@@ -37,7 +33,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       })
     );
 
-    // 2️⃣ Dummy local account
+    // 🧩 3️⃣ Dummy local account
     const account: LocalAccount = {
       address: safeWallet as `0x${string}`,
       type: "local",
@@ -49,7 +45,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
     };
 
-    // 3️⃣ SmartAccount — FIX paymaster
+    // 🧩 4️⃣ SmartAccount with simple paymaster
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
       account,
@@ -61,7 +57,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       },
     });
 
-    // 4️⃣ Encode dan kirim
+    // 🧩 5️⃣ Encode and send
     const data = encodeFunctionData({
       abi: TETRA_SCORE_ABI,
       functionName: "saveScore",
