@@ -13,7 +13,6 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
   try {
     if (!wallet) throw new Error("⚠️ Wallet not connected!");
     const safeWallet = normalizeAddress(wallet);
-    console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
     // Dummy delegation to keep running without full SDK signer
     const delegation = {
@@ -36,16 +35,16 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       })
     );
 
-    // Fully typed account object with required properties to fix type errors
+    // Correctly typed account object with explicit literal types for publicKey etc.
     const account = {
       address: safeWallet as `0x${string}`,
-      signTransaction: async () => ("0x" + "0".repeat(64)) as `0x${string}`, 
-      signMessage: async ({ message }: { message: unknown }) => ("0x" + "0".repeat(64)) as `0x${string}`,
-      signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`, // Add missing method
-      publicKey: "0x" + "0".repeat(66), // Dummy publicKey
-      source: "dummy-source",
-      type: "EOA", 
-      // Add additional optional properties if your SDK interface requires
+      signTransaction: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
+      signMessage: async ({ message }: { message: unknown }) =>
+        ("0x" + "0".repeat(64)) as `0x${string}`,
+      signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
+      publicKey: ("0x" + "0".repeat(66)) as `0x${string}`, // explicit type assertion here
+      source: "dummy-source" as `0x${string}`,
+      type: "EOA" as const,
     };
 
     const smartAccount = await createSmartAccountClient({
