@@ -38,7 +38,7 @@ async function getSmartAccountClient(signerAddress: string) {
     pimlicoActions({
       entryPoint: {
         address: "0x0000000000000000000000000000000000000000", // dummy safe address
-        version: "v0.7", // ✅ EntryPoint versi baru
+        version: "0.7", // ✅ EntryPoint versi baru
       },
     })
   );
