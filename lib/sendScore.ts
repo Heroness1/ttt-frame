@@ -3,31 +3,26 @@ import { pimlicoActions } from "permissionless/actions/pimlico";
 import { createPublicClient, encodeFunctionData, http } from "viem";
 import { monadTestnet } from "viem/chains";
 import { TETRA_SCORE_ABI, TETRA_SCORE_ADDRESS } from "./tetrascore";
+import { normalizeAddress } from "./utils";
 
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
-/**
- * Save Tetris score to Monad testnet via Pimlico gasless transaction.
- * @param wallet  address wallet pemain
- * @param scoreValue  nilai skor
- */
-export async function sendScoreToChain(wallet: string, scoreValue: number) {
+export async function sendScoreToChain(wallet, scoreValue) {
   try {
     if (!wallet) throw new Error("⚠️ Wallet not connected!");
-    console.log("🧠 Preparing to send score to Monad:", scoreValue);
+    const safeWallet = normalizeAddress(wallet);
+    console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
-    // Dummy delegation (biar bisa jalan tanpa SDK tambahan)
     const delegation = {
-      from: wallet,
-      to: wallet,
+      from: safeWallet,
+      to: safeWallet,
       validity: "7d",
       signature: "0x" + "f".repeat(130),
       timestamp: Date.now(),
     };
 
-    // 1️⃣ Setup Pimlico client
     const publicClient = createPublicClient({
       chain: monadTestnet,
       transport: http(RPC_URL),
@@ -40,11 +35,10 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       })
     );
 
-    // 2️⃣ Setup Smart Account
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
       account: {
-        address: wallet,
+        address: safeWallet,
         signTransaction: async (tx) => tx,
         signMessage: async (msg) => msg,
       },
@@ -53,26 +47,18 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       delegation,
     });
 
-    // 3️⃣ Encode function call
     const data = encodeFunctionData({
       abi: TETRA_SCORE_ABI,
       functionName: "saveScore",
-      args: [wallet, BigInt(scoreValue)],
+      args: [safeWallet, BigInt(scoreValue)],
     });
 
-    // 4️⃣ Send user operation
     const userOpHash = await smartAccount.sendUserOperation({
-      calls: [
-        {
-          to: TETRA_SCORE_ADDRESS,
-          data,
-          value: 0n,
-        },
-      ],
+      calls: [{ to: TETRA_SCORE_ADDRESS, data, value: 0n }],
     });
 
-    console.log(`✅ Score ${scoreValue} sent successfully!`);
-    console.log("🔗 UserOp hash:", userOpHash);
+    console.log(`✅ Score ${scoreValue} saved to chain!`);
+    console.log("🔗 Hash:", userOpHash);
     return userOpHash;
   } catch (err) {
     console.error("❌ Failed to send score:", err);
