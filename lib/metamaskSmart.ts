@@ -6,8 +6,9 @@ import { monadTestnet } from "viem/chains";
 
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
+const ENTRYPOINT_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-// fallback manual because PaymasterMode removed
+// fallback manual karena PaymasterMode udah dihapus dari versi baru
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
 let sdk: MetaMaskSDK | null = null;
@@ -32,35 +33,34 @@ export async function connectSmartAccount() {
   const eoa = accounts[0];
   console.log("🔗 Connected EOA:", eoa);
 
-  // Create publicClient with proper pimlicoActions config object
+  // Buat Viem Public Client dengan Pimlico actions
   const publicClient = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
   }).extend(
     pimlicoActions({
       entryPoint: {
-        address: "0x0000000000000000000000000000000000000000", // Replace with actual entry point address
-        version: "0.7" as any,
+        address: ENTRYPOINT_ADDRESS,
+        version: "0.7" as any, // pakai as any biar gak bentrok sama SafeVersion enum
       },
     })
   );
 
-  // Create smart account client passing serialization for transactions and proper signMessage
+  // Buat Smart Account Client yang kompatibel
   const smartAccountClient = await createSmartAccountClient({
     chain: monadTestnet,
     account: {
       address: eoa as `0x${string}`,
       signTransaction: async (tx) => {
         const serialized = serializeTransaction(tx);
-        return serialized; // Returns hex string serialized transaction
+        return serialized as `0x${string}`;
       },
-      signMessage: async (message) => {
-        // Use MetaMask provider personal_sign method to sign message
+      signMessage: async ({ message }) => {
         const signature = await ethereum.request({
           method: "personal_sign",
           params: [message, eoa],
         });
-        return signature as string; // Hex signature string starting with 0x
+        return signature as `0x${string}`;
       },
     },
     bundlerTransport: http(RPC_URL),
