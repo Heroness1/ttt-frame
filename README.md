@@ -1,6 +1,7 @@
-# TetraMON  
+# 🧩 TetraMON
 > Mobile-first, on-chain Tetris on the Monad Testnet — where every score lives on-chain.
 
+🎮 **Play now:** [https://ttt-frame.vercel.app]
 
 ## 🚀 Overview  
 **TetraMON** is a **mobile-friendly, on-chain Tetris-style game** built for the **Monad Testnet**.  
