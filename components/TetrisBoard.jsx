@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -22,8 +22,8 @@ const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
-// 🧩 Mock Delegation — biar gak butuh SDK tambahan
-async function createMockDelegation(from: string, to: string) {
+// 🧩 Mock Delegation — tanpa SDK tambahan
+async function createMockDelegation(from, to) {
   return {
     from,
     to,
@@ -49,8 +49,7 @@ const randomTetromino = () => {
   return { ...TETROMINOS[rand], name: rand };
 };
 
-// 🧱 Main Game Component
-export default function TetrisBoard({ wallet }: { wallet: string }) {
+export default function TetrisBoard({ wallet }) {
   const [grid, setGrid] = useState(emptyGrid());
   const [current, setCurrent] = useState({
     tetromino: randomTetromino(),
@@ -62,9 +61,9 @@ export default function TetrisBoard({ wallet }: { wallet: string }) {
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef(null);
 
-  // 🧠 Load High Score
+  // 🧠 Load high score
   useEffect(() => {
     const saved = localStorage.getItem("tetris-high-score");
     if (saved) setHighScore(parseInt(saved, 10));
@@ -77,8 +76,8 @@ export default function TetrisBoard({ wallet }: { wallet: string }) {
     }
   }, [score, highScore]);
 
-  // 💾 Save score to blockchain (Gasless via Pimlico)
-  async function sendScoreToChain(scoreValue: number) {
+  // 💾 Save score ke chain
+  async function sendScoreToChain(scoreValue) {
     try {
       if (!wallet) throw new Error("Wallet not connected!");
       setSubmitting(true);
@@ -129,7 +128,7 @@ export default function TetrisBoard({ wallet }: { wallet: string }) {
     }
   }
 
-  // 🎮 Game Loop
+  // 🎮 Game loop
   const tick = async () => {
     if (gameOver) return;
     const { x, y } = current.position;
@@ -166,7 +165,7 @@ export default function TetrisBoard({ wallet }: { wallet: string }) {
 
       if (checkCollision(newGrid, next, 0, startPos)) {
         setGameOver(true);
-        clearInterval(intervalRef.current!);
+        clearInterval(intervalRef.current);
         await sendScoreToChain(scoreRef.current);
       } else {
         setCurrent({ tetromino: next, rotation: 0, position: startPos });
@@ -177,11 +176,11 @@ export default function TetrisBoard({ wallet }: { wallet: string }) {
   useEffect(() => {
     if (gameOver) return;
     intervalRef.current = setInterval(tick, 700);
-    return () => clearInterval(intervalRef.current!);
+    return () => clearInterval(intervalRef.current);
   }, [current, gameOver, grid]);
 
   // ⌨️ Control logic
-  const handleControl = (direction: string) => {
+  const handleControl = (direction) => {
     if (gameOver) return;
     const { x, y } = current.position;
     let rotation = current.rotation;
@@ -218,14 +217,15 @@ export default function TetrisBoard({ wallet }: { wallet: string }) {
     backgroundColor: "#333",
     border: "2px solid #0ff",
     borderRadius: 6,
-    padding: "8px 12px",
+    padding: "10px 14px",
     color: "white",
     fontWeight: "bold",
     fontFamily: "monospace",
     cursor: "pointer",
-    minWidth: 60,
+    minWidth: 70,
   };
 
+  // 🔲 Render grid
   const renderGrid = () => {
     const visibleGrid = grid.slice(ROWS - VISIBLE_ROWS);
     const display = visibleGrid.map((row) => [...row]);
@@ -272,8 +272,26 @@ export default function TetrisBoard({ wallet }: { wallet: string }) {
           High Score: {highScore}
         </h3>
         {submitting && <p style={{ color: "#0f0", textAlign: "center" }}>⏳ Submitting score to Monad...</p>}
+        
         <div className="grid-container" style={{ width: COLS * 25 + 20, height: VISIBLE_ROWS * 25, backgroundColor: "#000", borderRadius: 10, border: "2px solid #0ff", overflow: "hidden" }}>
           {renderGrid()}
+        </div>
+
+        {/* 🎮 Mobile controller */}
+        <div style={{
+          marginTop: 30,
+          display: "grid",
+          gridTemplateAreas: `". up ." "left rot right" ". down ."`,
+          gridTemplateColumns: "repeat(3, 80px)",
+          gridTemplateRows: "repeat(3, 60px)",
+          justifyContent: "center",
+          gap: 10,
+          userSelect: "none",
+        }}>
+          <button style={{ ...btnStyle, gridArea: "up" }} onClick={() => handleControl("rotate")}>🔁</button>
+          <button style={{ ...btnStyle, gridArea: "left" }} onClick={() => handleControl("left")}>⬅️</button>
+          <button style={{ ...btnStyle, gridArea: "right" }} onClick={() => handleControl("right")}>➡️</button>
+          <button style={{ ...btnStyle, gridArea: "down" }} onClick={() => handleControl("down")}>⬇️</button>
         </div>
 
         {gameOver && (
