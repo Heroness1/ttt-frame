@@ -38,7 +38,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
       account: {
-        address: safeWallet as `0x${string}`,
+        address: safeWallet as `0x${string}`, // ✅ FIXED HERE
         signTransaction: async (tx) => tx,
         signMessage: async (msg) => msg,
       },
@@ -50,7 +50,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const data = encodeFunctionData({
       abi: TETRA_SCORE_ABI,
       functionName: "saveScore",
-      args: [safeWallet, BigInt(scoreValue)],
+      args: [safeWallet as `0x${string}`, BigInt(scoreValue)], // ✅ optional safe cast
     });
 
     const userOpHash = await smartAccount.sendUserOperation({
