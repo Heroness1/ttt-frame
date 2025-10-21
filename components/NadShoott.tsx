@@ -14,14 +14,15 @@ export default function NadShoott() {
   const [msg, setMsg] = useState("");
   const text = "MONAD MAXI";
 
+  // 🧩 Connect wallet
   async function connectWallet() {
     try {
       setConnecting(true);
-      if (!window.ethereum) {
+      if (!(window as any).ethereum) {
         alert("Please install MetaMask or use a Web3 browser");
         return;
       }
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
       const accounts = await provider.send("eth_requestAccounts", []);
       const address = ethers.getAddress(accounts[0]);
       setAccount(address);
@@ -34,29 +35,18 @@ export default function NadShoott() {
     }
   }
 
+  // 🎮 Start game — just redirect (no saving score)
   async function handlePlay() {
     if (!account) return setMsg("Please connect your wallet first!");
     setLoading(true);
-    setMsg("Saving score to blockchain...");
+    setMsg("Loading game...");
+
     try {
-      const res = await fetch("/frame", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          untrustedData: { requester_wallet_address: account },
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to save score");
-
-      const data = await res.json();
-      const url = new URL(data["frame:image"]);
-      const score = url.searchParams.get("score");
-      setMsg(`🎮 Score saved: ${score}`);
-      setTimeout(() => router.push("/game"), 1200);
+      // 🚀 Cuma redirect ke halaman game, bawa wallet-nya di query param
+      router.push(`/game?wallet=${account}`);
     } catch (err) {
       console.error("Play error:", err);
-      setMsg("❌ Failed to save score");
+      setMsg("❌ Failed to start game");
     } finally {
       setLoading(false);
     }
@@ -78,6 +68,7 @@ export default function NadShoott() {
           <TetrisMonadFlash boxSize={14} spacing={1} />
         </section>
 
+        {/* 🔗 Wallet connect button */}
         {!account ? (
           <button
             onClick={connectWallet}
@@ -92,6 +83,7 @@ export default function NadShoott() {
           </p>
         )}
 
+        {/* 🎮 Play button */}
         {account && (
           <section className="grid grid-cols-1 sm:grid-cols-2 max-w-md mx-auto gap-3 justify-center mt-3">
             <button
@@ -103,11 +95,12 @@ export default function NadShoott() {
                   : "shadow-[0_0_10px_rgba(0,255,255,0.7)] hover:shadow-[0_0_20px_rgba(0,255,255,0.9)]"
               }`}
             >
-              {loading ? "Saving..." : "Play Now"}
+              {loading ? "Loading..." : "Play Now"}
             </button>
           </section>
         )}
 
+        {/* 🧾 Message */}
         {msg && (
           <p className="text-center text-sm mt-2 text-gray-300">{msg}</p>
         )}
