@@ -1,12 +1,14 @@
 import { createPublicClient, http, parseEther } from "viem";
 import { monadTestnet } from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
-import { PaymasterMode } from "permissionless/types";
 import {
   pimlicoBundlerActions,
   pimlicoPaymasterActions,
 } from "permissionless/actions/pimlico";
 import { ethers } from "ethers";
+
+// ✅ manual enum fallback
+const PaymasterMode = { SPONSORED: "SPONSORED" };
 
 const CONTRACT_ADDRESS = "0xb6F7A3e43F2B22e5f73162c29a12c280A8c20db2";
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
