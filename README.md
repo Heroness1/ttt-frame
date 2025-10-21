@@ -32,3 +32,5 @@ Fallback EOA Mode (Viem Wallet Client + direct transaction) ↓ Monad Testnet (S
 - Pimlico Smart Account integration  
 - Solidity smart contract (Monad Testnet)  
 - GitHub + Vercel for deployment
+  
+This project was originally based on the [Monad Farcaster Miniapp Template](https://github.com/monadxyz/monad-farcaster-miniapp-template), modified and extended for TetraMON._
