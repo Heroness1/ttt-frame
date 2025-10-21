@@ -47,7 +47,9 @@ async function getSmartAccountClient(signerAddress: string) {
       signMessage: async (msg) => msg,
     },
     transport: http(RPC_URL),
-    paymaster: { mode: PaymasterMode.SPONSORED },
+    paymaster: {
+      mode: PaymasterMode.SPONSORED,
+    },
   });
 }
 
