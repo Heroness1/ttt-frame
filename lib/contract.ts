@@ -7,6 +7,7 @@ import { toSafeSmartAccount } from "permissionless/accounts";
 import { ethers } from "ethers";
 
 // ✅ Enum fallback manual (biar gak error di beberapa versi permissionless)
+type SafeVersion = "0.6" | "0.7";
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
 // 🔹 Environment constants
@@ -43,8 +44,7 @@ async function getSmartAccountClient(signerPrivateKey: string) {
     pimlicoActions({
       entryPoint: {
         address: "0x0000000000000000000000000000000000000000",
-        // gunakan "0.7" tanpa "v" biar tidak error type
-        version: "0.7",
+        version: "v0.7" as any, // pakai 'v0.7' biar match versi Pimlico bundler
       },
     })
   );
@@ -56,7 +56,7 @@ async function getSmartAccountClient(signerPrivateKey: string) {
   const smartAccount = await toSafeSmartAccount({
     client,
     owners: [signerAccount],
-    version: "0.7",
+    version: "0.7" as SafeVersion, // fix error TS
   });
 
   // ✅ Kembalikan smart account client (gasless ready)
