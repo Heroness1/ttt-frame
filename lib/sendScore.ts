@@ -8,7 +8,6 @@ import { normalizeAddress } from "./utils";
 
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
-const PaymasterMode = { SPONSORED: "SPONSORED" };
 
 export async function sendScoreToChain(wallet: string, scoreValue: number) {
   try {
@@ -16,6 +15,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const safeWallet = normalizeAddress(wallet);
     console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
+    // Dummy delegation
     const delegation = {
       from: safeWallet,
       to: safeWallet,
@@ -49,12 +49,16 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
     };
 
-    // 3️⃣ SmartAccount
+    // 3️⃣ SmartAccount — FIX paymaster
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
       account,
       bundlerTransport: http(RPC_URL),
-      paymaster: { mode: PaymasterMode.SPONSORED },
+      paymaster: {
+        getPaymasterData: async () => ({
+          paymasterAndData: "0x",
+        }),
+      },
       delegation,
     });
 
