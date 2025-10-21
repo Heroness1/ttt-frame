@@ -15,7 +15,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const safeWallet = normalizeAddress(wallet);
     console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
-    // dummy delegation agar bisa jalan tanpa SDK Pimlico
+    // Dummy delegation agar tetap bisa berjalan tanpa SDK
     const delegation = {
       from: safeWallet,
       to: safeWallet,
@@ -40,8 +40,10 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       chain: monadTestnet,
       account: {
         address: safeWallet as `0x${string}`,
-        signTransaction: async () => "0x" + "0".repeat(64), // ✅ FIX: return dummy hash
-        signMessage: async () => "0x" + "0".repeat(64), // ✅ juga dummy
+        signTransaction: async () =>
+          ("0x" + "0".repeat(64)) as `0x${string}`, // ✅ FIXED
+        signMessage: async ({ message }) =>
+          ("0x" + "0".repeat(64)) as `0x${string}`, // ✅ FIXED
       },
       bundlerTransport: http(RPC_URL),
       paymaster: { mode: PaymasterMode.SPONSORED },
