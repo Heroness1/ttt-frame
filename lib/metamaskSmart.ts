@@ -1,8 +1,7 @@
 import { MetaMaskSDK } from "@metamask/sdk";
 import { createSmartAccountClient } from "permissionless";
 import { pimlicoActions } from "permissionless/actions/pimlico";
-import { createPublicClient, http, serializeTransaction, custom } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { createPublicClient, http, serializeTransaction, custom, type TransactionSerializable } from "viem";
 import { monadTestnet } from "viem/chains";
 
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
@@ -33,13 +32,6 @@ export async function connectSmartAccount() {
   const eoa = accounts[0];
   console.log("🔗 Connected EOA:", eoa);
 
-  // Buat Viem client yang terhubung ke MetaMask
-  const metamaskClient = createPublicClient({
-    chain: monadTestnet,
-    transport: custom(ethereum),
-  });
-
-  // Bikin Pimlico bundler client
   const pimlicoClient = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
@@ -52,12 +44,11 @@ export async function connectSmartAccount() {
     })
   );
 
-  // Bentuk Smart Account Client dari MetaMask EOA
   const smartAccountClient = await createSmartAccountClient({
     chain: monadTestnet,
     account: {
       address: eoa as `0x${string}`,
-      signTransaction: async (tx) => {
+      signTransaction: async (tx: TransactionSerializable) => {
         const serialized = serializeTransaction(tx);
         return serialized as `0x${string}`;
       },
@@ -68,7 +59,7 @@ export async function connectSmartAccount() {
         });
         return signature as `0x${string}`;
       },
-    } as any, // ✅ bypass TS strict checking safely
+    } as any,
     client: pimlicoClient,
     paymaster: { mode: PaymasterMode.SPONSORED },
   });
