@@ -14,17 +14,16 @@ import { runExplosions } from "./explosionUtils";
 import "./explode.css";
 import { TETRA_SCORE_ABI, TETRA_SCORE_ADDRESS } from "../lib/tetrascore";
 import { createSmartAccountClient } from "permissionless";
-import { pimlicoBundlerActions, pimlicoPaymasterActions } from "permissionless/actions/pimlico";
+import { pimlicoActions } from "permissionless/actions/pimlico";
 import { createPublicClient, encodeFunctionData, http } from "viem";
 import { monadTestnet } from "viem/chains";
 
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
-const PAYMASTER_URL = `https://api.pimlico.io/v2/monad-testnet/paymaster?apikey=${PIMLICO_API_KEY}`;
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
-// 🧩 Delegation mock — jalan tanpa SDK
-async function createMockDelegation(from, to) {
+// 🧩 Mock Delegation — biar gak butuh SDK tambahan
+async function createMockDelegation(from: string, to: string) {
   return {
     from,
     to,
@@ -51,7 +50,7 @@ const randomTetromino = () => {
 };
 
 // 🧱 Main Game Component
-export default function TetrisBoard({ wallet }) {
+export default function TetrisBoard({ wallet }: { wallet: string }) {
   const [grid, setGrid] = useState(emptyGrid());
   const [current, setCurrent] = useState({
     tetromino: randomTetromino(),
@@ -63,9 +62,9 @@ export default function TetrisBoard({ wallet }) {
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const intervalRef = useRef(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 🧠 Auto load High Score
+  // 🧠 Load High Score
   useEffect(() => {
     const saved = localStorage.getItem("tetris-high-score");
     if (saved) setHighScore(parseInt(saved, 10));
@@ -78,8 +77,8 @@ export default function TetrisBoard({ wallet }) {
     }
   }, [score, highScore]);
 
-  // 🧬 Save score to blockchain
-  async function sendScoreToChain(scoreValue) {
+  // 💾 Save score to blockchain (Gasless via Pimlico)
+  async function sendScoreToChain(scoreValue: number) {
     try {
       if (!wallet) throw new Error("Wallet not connected!");
       setSubmitting(true);
@@ -89,9 +88,14 @@ export default function TetrisBoard({ wallet }) {
       const publicClient = createPublicClient({
         chain: monadTestnet,
         transport: http(RPC_URL),
-      })
-        .extend(pimlicoBundlerActions(RPC_URL))
-        .extend(pimlicoPaymasterActions(PAYMASTER_URL));
+      }).extend(
+        pimlicoActions({
+          entryPoint: {
+            address: "0x0000000000000000000000000000000000000000",
+            version: "0.7",
+          },
+        })
+      );
 
       const smartAccount = await createSmartAccountClient({
         chain: monadTestnet,
@@ -100,7 +104,7 @@ export default function TetrisBoard({ wallet }) {
           signTransaction: async (tx) => tx,
           signMessage: async (msg) => msg,
         },
-        transport: http(RPC_URL),
+        bundlerTransport: http(RPC_URL),
         paymaster: { mode: PaymasterMode.SPONSORED },
         delegation,
       });
@@ -162,7 +166,7 @@ export default function TetrisBoard({ wallet }) {
 
       if (checkCollision(newGrid, next, 0, startPos)) {
         setGameOver(true);
-        clearInterval(intervalRef.current);
+        clearInterval(intervalRef.current!);
         await sendScoreToChain(scoreRef.current);
       } else {
         setCurrent({ tetromino: next, rotation: 0, position: startPos });
@@ -173,11 +177,11 @@ export default function TetrisBoard({ wallet }) {
   useEffect(() => {
     if (gameOver) return;
     intervalRef.current = setInterval(tick, 700);
-    return () => clearInterval(intervalRef.current);
+    return () => clearInterval(intervalRef.current!);
   }, [current, gameOver, grid]);
 
   // ⌨️ Control logic
-  const handleControl = (direction) => {
+  const handleControl = (direction: string) => {
     if (gameOver) return;
     const { x, y } = current.position;
     let rotation = current.rotation;
@@ -210,7 +214,6 @@ export default function TetrisBoard({ wallet }) {
     setCurrent({ tetromino: randomTetromino(), rotation: 0, position: { x: 3, y: 0 } });
   };
 
-  // 🎨 UI
   const btnStyle = {
     backgroundColor: "#333",
     border: "2px solid #0ff",
