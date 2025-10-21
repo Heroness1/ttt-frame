@@ -28,6 +28,7 @@ const ABI = [
 ];
 
 async function getSmartAccountClient(privateKey: string) {
+  // Create the base public client with chain and RPC transport
   const baseClient = createPublicClient({
     chain: monadTestnet,
     transport: http(RPC_URL),
@@ -35,22 +36,25 @@ async function getSmartAccountClient(privateKey: string) {
     pimlicoActions({
       entryPoint: {
         address: "0x0000000000000000000000000000000000000000",
-        version: "0.7" as any, // Type assertion to fix SafeVersion mismatch
+        version: "0.7" as any, // type assertion to match SafeVersion
       },
     })
   );
 
   const signerAccount = privateKeyToAccount(privateKey as `0x${string}`);
+
+  // Create a Safe smart account with the baseClient and signer
   const smartAccount = await toSafeSmartAccount({
     client: baseClient,
     owners: [signerAccount],
-    version: "0.7" as any, // Same fix here
+    version: "0.7" as any,
   });
 
-  const client = await createSmartAccountClient({
+  // Create SmartAccountClient with bundlerTransport instead of transport
+  const client = createSmartAccountClient({
     account: smartAccount,
     chain: monadTestnet,
-    transport: http(RPC_URL),
+    bundlerTransport: http(RPC_URL), // Correct property for transport
     paymaster: {
       getPaymasterData: async () => ({
         paymaster: "0x0000000000000000000000000000000000000000",
