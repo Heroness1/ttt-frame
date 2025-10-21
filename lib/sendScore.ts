@@ -13,8 +13,9 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
   try {
     if (!wallet) throw new Error("⚠️ Wallet not connected!");
     const safeWallet = normalizeAddress(wallet);
+    console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
-    // Dummy delegation to keep running without full SDK signer
+    // Dummy delegation agar tetap bisa jalan tanpa SDK
     const delegation = {
       from: safeWallet,
       to: safeWallet,
@@ -23,6 +24,7 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       timestamp: Date.now(),
     };
 
+    // 1️⃣ Setup Pimlico public client
     const publicClient = createPublicClient({
       chain: monadTestnet,
       transport: http(RPC_URL),
@@ -35,26 +37,30 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       })
     );
 
-    // Correctly typed account object with explicit literal types for publicKey etc.
+    // 2️⃣ Dummy signer account (mocked local account)
     const account = {
       address: safeWallet as `0x${string}`,
-      signTransaction: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
-      signMessage: async ({ message }: { message: unknown }) =>
+      publicKey: ("0x" + "1".repeat(128)) as `0x${string}`,
+      source: ("0x" + "2".repeat(64)) as `0x${string}`,
+      type: "local", // ✅ FIX: must be "local" not "EOA"
+      signTransaction: async () =>
         ("0x" + "0".repeat(64)) as `0x${string}`,
-      signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
-      publicKey: ("0x" + "0".repeat(66)) as `0x${string}`, // explicit type assertion here
-      source: "dummy-source" as `0x${string}`,
-      type: "EOA" as const,
+      signMessage: async ({ message }: { message: string }) =>
+        ("0x" + "0".repeat(64)) as `0x${string}`,
+      signTypedData: async () =>
+        ("0x" + "0".repeat(64)) as `0x${string}`,
     };
 
+    // 3️⃣ Smart account client
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
-      account,
+      account, // ✅ now type-safe
       bundlerTransport: http(RPC_URL),
       paymaster: { mode: PaymasterMode.SPONSORED },
       delegation,
     });
 
+    // 4️⃣ Encode and send transaction
     const data = encodeFunctionData({
       abi: TETRA_SCORE_ABI,
       functionName: "saveScore",
