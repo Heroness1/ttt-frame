@@ -9,7 +9,7 @@ const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
 const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 const PaymasterMode = { SPONSORED: "SPONSORED" };
 
-export async function sendScoreToChain(wallet, scoreValue) {
+export async function sendScoreToChain(wallet: string, scoreValue: number) {
   try {
     if (!wallet) throw new Error("⚠️ Wallet not connected!");
     const safeWallet = normalizeAddress(wallet);
