@@ -1,7 +1,13 @@
 import { MetaMaskSDK } from "@metamask/sdk";
 import { createSmartAccountClient } from "permissionless";
 import { pimlicoActions } from "permissionless/actions/pimlico";
-import { createPublicClient, http, serializeTransaction, custom, type TransactionSerializable } from "viem";
+import {
+  createPublicClient,
+  http,
+  serializeTransaction,
+  custom,
+  type TransactionSerializable,
+} from "viem";
 import { monadTestnet } from "viem/chains";
 
 const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
@@ -52,7 +58,7 @@ export async function connectSmartAccount() {
         const serialized = serializeTransaction(tx);
         return serialized as `0x${string}`;
       },
-      signMessage: async ({ message }) => {
+      signMessage: async ({ message }: { message: string }) => {
         const signature = await ethereum.request({
           method: "personal_sign",
           params: [message, eoa],
