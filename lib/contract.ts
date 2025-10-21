@@ -1,7 +1,7 @@
 import { createPublicClient, http, parseEther } from "viem";
 import { monadTestnet } from "viem/chains";
 import { createSmartAccountClient } from "permissionless";
-import { pimlicoActions } from "permissionless/actions/pimlico"; // ✅ FIXED
+import { pimlicoActions } from "permissionless/actions/pimlico";
 import { ethers } from "ethers";
 
 // ✅ manual fallback for mode
@@ -38,7 +38,7 @@ async function getSmartAccountClient(signerAddress: string) {
     pimlicoActions({
       entryPoint: {
         address: "0x0000000000000000000000000000000000000000", // dummy safe address
-        version: "0.7", // ✅ EntryPoint versi baru
+        version: "0.7", // 
       },
     })
   );
@@ -46,13 +46,13 @@ async function getSmartAccountClient(signerAddress: string) {
   return await createSmartAccountClient({
     chain: monadTestnet,
     account: {
-      address: signerAddress as `0x${string}`,
-      signTransaction: async (tx) => tx,
-      signMessage: async (msg) => msg,
-    },
+  address: signerAddress as `0x${string}`,
+  signTransaction: async () => "0x", 
+  signMessage: async () => "0x",     
+},
     transport: http(RPC_URL),
     paymaster: {
-      mode: PaymasterMode.SPONSORED, // ✅ tetap gasless
+      mode: PaymasterMode.SPONSORED,
     },
   });
 }
