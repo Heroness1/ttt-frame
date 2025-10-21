@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { connectSmartAccount } from "../lib/metamaskSmart";
 import TetrisMonadFlash from "../components/TetrisMonadFlash";
 
+
 export default function NadShoott() {
   const router = useRouter();
   const typewriterRef = useRef<HTMLParagraphElement>(null);
