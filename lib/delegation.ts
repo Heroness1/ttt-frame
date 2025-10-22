@@ -1,4 +1,4 @@
-import { createDelegation } from "@metamask/delegation-toolkit";
+import { createDelegation, DeleGatorEnvironment } from "@metamask/delegation-toolkit";
 
 /**
  * Inisialisasi delegation untuk player (MetaMask Delegation Toolkit)
@@ -15,8 +15,8 @@ export async function initDelegationForPlayer(wallet: string) {
     const delegation = await createDelegation({
       from: safeWallet,
       to: safeWallet,
-      environment: "production", // atau "test" kalau mau simulasi lokal
-      scope: "tetragon_game_score", // bebas, asal unik
+      environment: DeleGatorEnvironment.Production, // ✅ pakai enum, bukan string literal
+      scope: "tetramon_game_score", // unik
       caveats: [], // opsional
     });
 
