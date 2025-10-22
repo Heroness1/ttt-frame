@@ -11,11 +11,13 @@ export async function initDelegationForPlayer(wallet: string) {
     if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address");
     const safeWallet = wallet as `0x${string}`;
 
-    // ✅ Buat delegation sederhana (tanpa expiry/permissions)
+    // ✅ Create delegation sesuai versi 0.13.0
     const delegation = await createDelegation({
       from: safeWallet,
       to: safeWallet,
-      caveats: [], // opsional: bisa ditambah batasan fungsi di sini
+      environment: "production", // atau "test" kalau mau simulasi lokal
+      scope: "tetragon_game_score", // bebas, asal unik
+      caveats: [], // opsional
     });
 
     console.log("🪶 Delegation created successfully:", delegation);
