@@ -1,83 +1,40 @@
-import { createSmartAccountClient } from "permissionless";
-import { pimlicoActions } from "permissionless/actions/pimlico";
-import { createPublicClient, encodeFunctionData, http, type SignableMessage } from "viem";
-import { monadTestnet } from "viem/chains";
-import { type LocalAccount } from "viem/accounts";
-import { TETRA_SCORE_ABI, TETRA_SCORE_ADDRESS } from "./tetrascore";
-import { normalizeAddress } from "./utils";
-import { initDelegationForPlayer } from "./delegation";
+/**
+ * 🧩 sendScore.ts
+ * Kirim skor pemain ke smart contract di Monad Testnet lewat Pimlico + Delegation Toolkit.
+ * Aman buat build & cocok buat Hackathon deployment.
+ */
 
-const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
-const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
+import { sendScoreBridge } from "./metaBridge";
+import { TETRA_SCORE_ABI, TETRA_SCORE_ADDRESS } from "./tetrascore";
 
 /**
- * Save Tetris score to Monad testnet via Pimlico gasless transaction.
- * Uses Delegation Toolkit + Sponsored Paymaster.
+ * Save player score ke chain
+ * @param wallet - Alamat wallet pemain (EOA)
+ * @param scoreValue - Skor numerik (angka)
  */
 export async function sendScoreToChain(wallet: string, scoreValue: number) {
   try {
-    if (!wallet) throw new Error("⚠️ Wallet not connected!");
-    const safeWallet = normalizeAddress(wallet);
-    console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
+    if (!wallet || !wallet.startsWith("0x")) {
+      throw new Error("⚠️ Wallet address invalid or not connected");
+    }
 
-    // 🪪 1️⃣ Delegation (for logging/UX)
-    const delegation = await initDelegationForPlayer(wallet);
-    console.log("🎫 Delegation:", delegation);
+    console.log("🎮 Sending score via metaBridge...");
+    console.log("Wallet:", wallet);
+    console.log("Score:", scoreValue);
 
-    // 🔗 2️⃣ Public Client
-    const publicClient = createPublicClient({
-      chain: monadTestnet,
-      transport: http(RPC_URL),
-    }).extend(
-      pimlicoActions({
-        entryPoint: {
-          address: "0x0000000000000000000000000000000000000000",
-          version: "0.7",
-        },
-      })
+    const txHash = await sendScoreBridge(
+      wallet,
+      scoreValue,
+      TETRA_SCORE_ABI,
+      TETRA_SCORE_ADDRESS
     );
 
-    // 🧩 3️⃣ Dummy Local Account
-    const account: LocalAccount = {
-      address: safeWallet as `0x${string}`,
-      type: "local",
-      source: ("0x" + "2".repeat(64)) as `0x${string}`,
-      publicKey: ("0x" + "1".repeat(128)) as `0x${string}`,
-      signTransaction: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
-      signMessage: async ({ message }: { message: SignableMessage }) =>
-        ("0x" + "0".repeat(64)) as `0x${string}`,
-      signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
-    };
+    console.log("✅ Score successfully saved to Monad testnet!");
+    console.log("🔗 Tx hash / UserOp:", txHash);
 
-    // 💸 4️⃣ Smart Account Client (Sponsored via Pimlico)
-    const smartAccount = await createSmartAccountClient({
-      chain: monadTestnet,
-      account,
-      bundlerTransport: http(RPC_URL),
-      paymaster: {
-        getPaymasterData: async () => ({
-          paymasterAndData: "0x", // Sponsored mode placeholder
-        }),
-      },
-    });
-
-    // 🎮 5️⃣ Encode saveScore() call
-    const data = encodeFunctionData({
-      abi: TETRA_SCORE_ABI,
-      functionName: "saveScore",
-      args: [safeWallet as `0x${string}`, BigInt(scoreValue)],
-    });
-
-    // 🚀 6️⃣ Send UserOperation
-    const userOpHash = await smartAccount.sendUserOperation({
-      calls: [{ to: TETRA_SCORE_ADDRESS, data, value: 0n }],
-    });
-
-    console.log(`✅ Score ${scoreValue} saved successfully!`);
-    console.log("🔗 UserOp hash:", userOpHash);
-    return userOpHash;
+    return txHash;
   } catch (err) {
     console.error("❌ Failed to send score:", err);
-    throw err;
+    throw new Error("Gagal menyimpan skor ke chain. Lihat console log untuk detail.");
   }
 }
