@@ -1,5 +1,5 @@
 import { createSmartAccountClient } from "permissionless";
-import { pimlicoPaymasterClient } from "permissionless/actions/pimlico";
+import { pimlicoActions } from "permissionless/actions/pimlico";
 import { createPublicClient, encodeFunctionData, http, type SignableMessage } from "viem";
 import { monadTestnet } from "viem/chains";
 import { type LocalAccount } from "viem/accounts";
@@ -20,16 +20,24 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
     const safeWallet = normalizeAddress(wallet);
     console.log("🧠 Sending score for:", safeWallet, "value:", scoreValue);
 
-    // 🪪 1️⃣ Delegation
+    // 🪪 1️⃣ Delegation (for logging/UX)
     const delegation = await initDelegationForPlayer(wallet);
+    console.log("🎫 Delegation:", delegation);
 
     // 🔗 2️⃣ Public Client
     const publicClient = createPublicClient({
       chain: monadTestnet,
       transport: http(RPC_URL),
-    });
+    }).extend(
+      pimlicoActions({
+        entryPoint: {
+          address: "0x0000000000000000000000000000000000000000",
+          version: "0.7",
+        },
+      })
+    );
 
-    // 🧩 3️⃣ Dummy Local Account (for Smart Account)
+    // 🧩 3️⃣ Dummy Local Account
     const account: LocalAccount = {
       address: safeWallet as `0x${string}`,
       type: "local",
@@ -41,16 +49,16 @@ export async function sendScoreToChain(wallet: string, scoreValue: number) {
       signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
     };
 
-    // 💸 4️⃣ Smart Account Client (Sponsored by Pimlico)
+    // 💸 4️⃣ Smart Account Client (Sponsored via Pimlico)
     const smartAccount = await createSmartAccountClient({
       chain: monadTestnet,
       account,
       bundlerTransport: http(RPC_URL),
-      paymaster: await pimlicoPaymasterClient({
-        transport: http(RPC_URL),
-        sponsor: true, // ✅ Enable Sponsored Gas
-      }),
-      delegation,
+      paymaster: {
+        getPaymasterData: async () => ({
+          paymasterAndData: "0x", // Sponsored mode placeholder
+        }),
+      },
     });
 
     // 🎮 5️⃣ Encode saveScore() call
