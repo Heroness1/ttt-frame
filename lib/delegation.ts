@@ -1,11 +1,5 @@
 import { createDelegation, DelegatorEnvironment } from "@metamask/delegation-toolkit";
 
-/**
- * Inisialisasi delegation untuk player (MetaMask Delegation Toolkit)
- * Compatible dengan @metamask/delegation-toolkit@0.13.0
- * 
- * @param wallet - address EOA user (0x...)
- */
 export async function initDelegationForPlayer(wallet: string) {
   try {
     if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address");
@@ -15,8 +9,8 @@ export async function initDelegationForPlayer(wallet: string) {
     const delegation = await createDelegation({
       from: safeWallet,
       to: safeWallet,
-      environment: DelegatorEnvironment.Production, 
-      scope: "tetramon_game_score", 
+      environment: DelegatorEnvironment.Production, // ✅ ini fix utama
+      scope: "tetramon_game_score", // ⚡ branding TetraMON
       caveats: [],
     });
 
