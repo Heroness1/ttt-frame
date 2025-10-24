@@ -19,12 +19,12 @@ export async function initDelegationForPlayer(wallet: string) {
     // 🔒 TypeScript-safe coercion
     const environment = envString as unknown as DeleGatorEnvironment;
 
-    // ⚙️ Buat delegation MetaMask
+    // ⚙️ Buat delegation MetaMask (versi 0.13.0)
     const delegation = await createDelegation({
       from: safeWallet,
       to: safeWallet,
       environment,
-      scope: { id: "tetramon_game_score" }, // ✅ FIX: harus object, bukan string
+      scope: ["tetramon_game_score"], // ✅ FIX: harus array of string, bukan object
       caveats: [], // opsional
     });
 
