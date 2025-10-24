@@ -1,4 +1,4 @@
-import { createDelegation, DeleGatorEnvironment } from "@metamask/delegation-toolkit";
+import { createDelegation, DelegatorEnvironment } from "@metamask/delegation-toolkit";
 
 /**
  * Inisialisasi delegation untuk player (MetaMask Delegation Toolkit)
@@ -11,13 +11,13 @@ export async function initDelegationForPlayer(wallet: string) {
     if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address");
     const safeWallet = wallet as `0x${string}`;
 
-    // ✅ Create delegation sesuai versi 0.13.0
+    // ✅ Create delegation dengan enum environment
     const delegation = await createDelegation({
       from: safeWallet,
       to: safeWallet,
-      environment: DeleGatorEnvironment.Production, // ✅ pakai enum, bukan string literal
-      scope: "tetramon_game_score", // unik
-      caveats: [], // opsional
+      environment: DelegatorEnvironment.Production, 
+      scope: "tetramon_game_score", 
+      caveats: [],
     });
 
     console.log("🪶 Delegation created successfully:", delegation);
