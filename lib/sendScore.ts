@@ -1,40 +1,76 @@
-/**
- * 🧩 sendScore.ts
- * Kirim skor pemain ke smart contract di Monad Testnet lewat Pimlico + Delegation Toolkit.
- * Aman buat build & cocok buat Hackathon deployment.
- */
-
-import { sendScoreBridge } from "./metaBridge";
+import { createSmartAccountClient } from "permissionless";
+import { pimlicoPaymasterClient } from "permissionless/actions/pimlico";
+import { createPublicClient, encodeFunctionData, http, type SignableMessage } from "viem";
+import { monadTestnet } from "viem/chains";
+import { type LocalAccount } from "viem/accounts";
 import { TETRA_SCORE_ABI, TETRA_SCORE_ADDRESS } from "./tetrascore";
+import { normalizeAddress } from "./utils";
+import { initDelegationForPlayer } from "./delegation";
+
+const PIMLICO_API_KEY = process.env.NEXT_PUBLIC_PIMLICO_API_KEY!;
+const RPC_URL = `https://api.pimlico.io/v2/monad-testnet/rpc?apikey=${PIMLICO_API_KEY}`;
 
 /**
- * Save player score ke chain
- * @param wallet - Alamat wallet pemain (EOA)
- * @param scoreValue - Skor numerik (angka)
+ * Save TetraMON score to Monad testnet via Pimlico gasless transaction.
+ * Uses Delegation Toolkit + Sponsored Paymaster.
  */
 export async function sendScoreToChain(wallet: string, scoreValue: number) {
   try {
-    if (!wallet || !wallet.startsWith("0x")) {
-      throw new Error("⚠️ Wallet address invalid or not connected");
-    }
+    if (!wallet) throw new Error("⚠️ Wallet not connected!");
+    const safeWallet = normalizeAddress(wallet);
+    console.log("🧠 Sending TetraMON score for:", safeWallet, "value:", scoreValue);
 
-    console.log("🎮 Sending score via metaBridge...");
-    console.log("Wallet:", wallet);
-    console.log("Score:", scoreValue);
+    // 🪪 1️⃣ Delegation
+    const delegation = await initDelegationForPlayer(wallet);
 
-    const txHash = await sendScoreBridge(
-      wallet,
-      scoreValue,
-      TETRA_SCORE_ABI,
-      TETRA_SCORE_ADDRESS
-    );
+    // 🔗 2️⃣ Public Client
+    const publicClient = createPublicClient({
+      chain: monadTestnet,
+      transport: http(RPC_URL),
+    });
 
-    console.log("✅ Score successfully saved to Monad testnet!");
-    console.log("🔗 Tx hash / UserOp:", txHash);
+    // 🧩 3️⃣ Dummy Local Account (untuk Smart Account)
+    const account: LocalAccount = {
+      address: safeWallet as `0x${string}`,
+      type: "local",
+      source: ("0x" + "2".repeat(64)) as `0x${string}`,
+      publicKey: ("0x" + "1".repeat(128)) as `0x${string}`,
+      signTransaction: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
+      signMessage: async ({ message }: { message: SignableMessage }) =>
+        ("0x" + "0".repeat(64)) as `0x${string}`,
+      signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
+    };
 
-    return txHash;
+    // 💸 4️⃣ Smart Account Client (Sponsored Gas)
+    const smartAccount = await createSmartAccountClient({
+      chain: monadTestnet,
+      account,
+      bundlerTransport: http(RPC_URL),
+      paymaster: pimlicoPaymasterClient({
+        transport: http(RPC_URL),
+        sponsor: true, // ✅ enable sponsored gas (gasless)
+      }),
+      // ⚠️ Delegation optional — aktifkan lagi nanti jika SDK sudah support
+      // delegation,
+    });
+
+    // 🎮 5️⃣ Encode saveScore() call
+    const data = encodeFunctionData({
+      abi: TETRA_SCORE_ABI,
+      functionName: "saveScore",
+      args: [safeWallet as `0x${string}`, BigInt(scoreValue)],
+    });
+
+    // 🚀 6️⃣ Send UserOperation
+    const userOpHash = await smartAccount.sendUserOperation({
+      calls: [{ to: TETRA_SCORE_ADDRESS, data, value: 0n }],
+    });
+
+    console.log(`✅ TetraMON score ${scoreValue} saved successfully!`);
+    console.log("🔗 UserOp hash:", userOpHash);
+    return userOpHash;
   } catch (err) {
-    console.error("❌ Failed to send score:", err);
-    throw new Error("Gagal menyimpan skor ke chain. Lihat console log untuk detail.");
+    console.error("❌ Failed to send TetraMON score:", err);
+    throw err;
   }
 }
