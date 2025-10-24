@@ -1,36 +1,32 @@
 import { createDelegation, type DeleGatorEnvironment } from "@metamask/delegation-toolkit";
 
 /**
- * 🪪 Inisialisasi delegation untuk player (MetaMask Delegation Toolkit)
- * Compatible dengan @metamask/delegation-toolkit@0.13.0
- * 
- * @param wallet - address EOA user (0x...)
- * @returns delegation object siap dipakai di Smart Account / Pimlico flow
+ * 🪪 Init Delegation MetaMask (v0.13.0)
+ * Compatible for TetraMON game + Pimlico gasless
  */
 export async function initDelegationForPlayer(wallet: string) {
   try {
     if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address");
     const safeWallet = wallet as `0x${string}`;
 
-    // 🌐 Auto detect environment dari Vercel atau fallback ke local
+    // 🌐 Environment detection
     const envString =
       process.env.VERCEL_ENV === "production" ? "production" : "test";
-
-    // 🔒 TypeScript-safe coercion
     const environment = envString as unknown as DeleGatorEnvironment;
 
-    // ⚙️ Buat delegation MetaMask (versi 0.13.0)
+    // ⚙️ Create delegation
     const delegation = await createDelegation({
       from: safeWallet,
       to: safeWallet,
       environment,
-      scope: ["tetramon_game_score"], // ✅ FIX: harus array of string, bukan object
+      scope: {
+        namespace: "tetramon_game_score", // ✅ FIX: sesuai ScopeConfig
+        allowedActions: ["sign", "execute"], // optional
+      },
       caveats: [], // opsional
     });
 
     console.log("🪶 Delegation created successfully:", delegation);
-    console.log("🌍 Environment:", environment);
-
     return delegation;
   } catch (err) {
     console.error("❌ Failed to create delegation:", err);
