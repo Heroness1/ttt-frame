@@ -9,14 +9,15 @@ import { createDelegation, type DeleGatorEnvironment } from "@metamask/delegatio
  */
 export async function initDelegationForPlayer(wallet: string) {
   try {
-    if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address format");
+    if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address");
     const safeWallet = wallet as `0x${string}`;
 
     // 🌐 Auto detect environment dari Vercel atau fallback ke local
-    const environment =
-      process.env.VERCEL_ENV === "production"
-        ? ("production" as DeleGatorEnvironment)
-        : ("test" as DeleGatorEnvironment);
+    const envString =
+      process.env.VERCEL_ENV === "production" ? "production" : "test";
+
+    // 🔒 TypeScript-safe conversion ke DeleGatorEnvironment
+    const environment = envString as unknown as DeleGatorEnvironment;
 
     // ⚙️ Buat delegation MetaMask
     const delegation = await createDelegation({
