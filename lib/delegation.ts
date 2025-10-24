@@ -16,7 +16,7 @@ export async function initDelegationForPlayer(wallet: string) {
     const envString =
       process.env.VERCEL_ENV === "production" ? "production" : "test";
 
-    // 🔒 TypeScript-safe conversion ke DeleGatorEnvironment
+    // 🔒 TypeScript-safe coercion
     const environment = envString as unknown as DeleGatorEnvironment;
 
     // ⚙️ Buat delegation MetaMask
@@ -24,7 +24,7 @@ export async function initDelegationForPlayer(wallet: string) {
       from: safeWallet,
       to: safeWallet,
       environment,
-      scope: "tetramon_game_score", // unik untuk game lo
+      scope: { id: "tetramon_game_score" }, // ✅ FIX: harus object, bukan string
       caveats: [], // opsional
     });
 
