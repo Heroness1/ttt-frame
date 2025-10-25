@@ -10,15 +10,16 @@ export async function initDelegationForPlayer(wallet: string) {
     if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address");
     const safeWallet = wallet as `0x${string}`;
 
+    // Dapatkan environment dengan tipe benar
     const envString = process.env.VERCEL_ENV === "production" ? "production" : "test";
     const environment = envString as unknown as DeleGatorEnvironment;
 
     // Ambil function selector untuk fungsi saveScore(address,uint256)
     const saveScoreSelector = getFunctionSelector("saveScore(address,uint256)");
 
-    // Scope harus bertipe objek bukan string
+    // Definisikan scope dengan tipe literal 'functionCall' dan objek sesuai tipe ScopeConfig
     const scope = {
-      type: "functionCall",
+      type: "functionCall" as const,
       targets: [TETRA_SCORE_ADDRESS],
       selectors: [saveScoreSelector],
     };
