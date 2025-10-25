@@ -1,12 +1,8 @@
-/**
- * 🧠 metaBridge.ts
- * Compatibility bridge buat MetaMask Delegation Toolkit + Permissionless + Viem.
- * Tujuannya: bikin kode gak gampang rusak walau ada update versi minor.
- */
 
 import {
   createDelegation as rawCreateDelegation,
   type CreateDelegationOptions,
+  type DeleGatorEnvironment,
 } from "@metamask/delegation-toolkit";
 import {
   createPublicClient,
@@ -28,12 +24,12 @@ export async function createSafeDelegation(wallet: string) {
   if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address");
   const safeWallet = wallet as `0x${string}`;
 
+  const envString: DeleGatorEnvironment = process.env.VERCEL_ENV === "production" ? "production" : "test";
+
   const opts: Partial<CreateDelegationOptions> = {
     from: safeWallet,
     to: safeWallet,
-    // adapt ke enum baru di 0.13.x (DeleGatorEnvironment)
-    // fallback ke string kalau type system belum kenal
-    environment: (("production" as any) || "test") as any,
+    environment: envString,
     scope: "tetragon_score_bridge",
     caveats: [],
   };
