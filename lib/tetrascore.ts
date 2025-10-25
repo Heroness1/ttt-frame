@@ -1,5 +1,4 @@
-export const TETRA_SCORE_ADDRESS = "0xb6F7A3e43F2B22e5f73162c29a12c280A8c20db2";
-
+export const TETRA_SCORE_ADDRESS = "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`;
 export const TETRA_SCORE_ABI = [
   {
     "inputs": [
