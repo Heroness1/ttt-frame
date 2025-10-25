@@ -1,8 +1,7 @@
-
 import {
   createDelegation as rawCreateDelegation,
   type CreateDelegationOptions,
-  type DeleGatorEnvironment,
+  DeleGatorEnvironment,
 } from "@metamask/delegation-toolkit";
 import {
   createPublicClient,
@@ -24,12 +23,16 @@ export async function createSafeDelegation(wallet: string) {
   if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address");
   const safeWallet = wallet as `0x${string}`;
 
-  const envString: DeleGatorEnvironment = process.env.VERCEL_ENV === "production" ? "production" : "test";
+  // ✅ FIX: use proper enum instead of string
+  const environment =
+    process.env.VERCEL_ENV === "production"
+      ? DeleGatorEnvironment.Production
+      : DeleGatorEnvironment.Test;
 
   const opts: Partial<CreateDelegationOptions> = {
     from: safeWallet,
     to: safeWallet,
-    environment: envString,
+    environment,
     scope: "tetragon_score_bridge",
     caveats: [],
   };
