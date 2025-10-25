@@ -1,7 +1,7 @@
 import {
   createDelegation as rawCreateDelegation,
   type CreateDelegationOptions,
-  DeleGatorEnvironment,
+  type DeleGatorEnvironment,
 } from "@metamask/delegation-toolkit";
 import {
   createPublicClient,
@@ -23,11 +23,11 @@ export async function createSafeDelegation(wallet: string) {
   if (!wallet.startsWith("0x")) throw new Error("❌ Invalid wallet address");
   const safeWallet = wallet as `0x${string}`;
 
-  // ✅ FIX: use proper enum instead of string
+  // ✅ FIX: use type-cast (not enum)
   const environment =
-    process.env.VERCEL_ENV === "production"
-      ? DeleGatorEnvironment.Production
-      : DeleGatorEnvironment.Test;
+    (process.env.VERCEL_ENV === "production"
+      ? "production"
+      : "test") as DeleGatorEnvironment;
 
   const opts: Partial<CreateDelegationOptions> = {
     from: safeWallet,
@@ -81,13 +81,11 @@ export async function createPimlicoSmartAccount(safeWallet: string) {
     signTypedData: async () => ("0x" + "0".repeat(64)) as `0x${string}`,
   };
 
-  // Create Smart Account Client
   const smartAccount = await createSmartAccountClient({
     chain: monadTestnet,
     account: dummyAccount,
     bundlerTransport: http(RPC_URL),
     paymaster: {
-      // Sponsored gasless setup
       getPaymasterData: async () => ({
         paymasterAndData: "0x",
       }),
